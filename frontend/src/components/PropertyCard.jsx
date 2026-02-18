@@ -1,22 +1,71 @@
-import { Card, CardMedia, CardContent, Typography, Box } from '@mui/material';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@mui/material'; // Importation de Button
+import './PropertyCard.css'; 
 
-const PropertyCard = ({ property }) => (
-  <Card sx={{ maxWidth: 345, borderRadius: 2, transition: '0.3s', '&:hover': { boxShadow: 10 } }}>
-    <CardMedia 
-      component="img" 
-      height="200" 
-      image="https://images.unsplash.com/photo-1568605114967-8130f3a36994" 
-      alt="propriété" 
-    />
-    <CardContent>
-      <Typography variant="h6" gutterBottom>{property.title}</Typography>
-      <Typography variant="body2" color="text.secondary">{property.location}</Typography>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-        <Typography variant="h6" color="primary">{property.price} DT</Typography>
-        <Typography variant="body2" sx={{ alignSelf: 'center' }}>{property.rooms} Pièces</Typography>
-      </Box>
-    </CardContent>
-  </Card>
-);
+const PropertyCard = ({ property }) => {
+  const navigate = useNavigate();
 
-export default PropertyCard; 
+  // Fonction pour gérer la redirection
+  const handleDetailsClick = () => {
+    navigate(`/property/${property._id}`);
+  };
+
+  return (
+    <div className="property-card">
+      {/* 1. Image et Statut */}
+      <div className="property-image">
+        <img 
+          src={property.images && property.images[0] ? property.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'} 
+          alt={property.title} 
+        />
+        <div className={`status-badge ${property.status}`}>
+          {property.status}
+        </div>
+      </div>
+      
+      {/* 2. Informations textuelles */}
+      <div className="property-content">
+        <h3 className="property-title">{property.title}</h3>
+        <p className="property-location">
+          <span>📍</span> {property.location}
+        </p>
+        
+        {/* 3. Caractéristiques */}
+        <div className="property-specs">
+          <div className="spec-item">
+            <span>🛏️</span> {property.rooms} Ch
+          </div>
+          <div className="spec-item">
+            <span>📐</span> {property.surface} m²
+          </div>
+          <div className="spec-item">
+            <span>🏢</span> {property.type}
+          </div>
+        </div>
+        
+        <hr />
+        
+        {/* 4. Prix et Action */}
+        <div className="property-footer">
+          <div className="price-tag">
+            <span className="amount">{property.price}</span>
+            <span className="currency"> DT</span>
+          </div>
+        </div>
+
+        {/* Bouton unique pour les détails */}
+        <Button 
+          variant="contained" 
+          fullWidth 
+          onClick={handleDetailsClick}
+          sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 'bold' }}
+        >
+          Voir les Détails
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default PropertyCard;

@@ -10,7 +10,7 @@ const authRoutes = require('./routes/auth');
 const authMiddleware = require('./middleware/auth'); 
 const User = require('./models/User'); 
 const Property = require('./models/Property'); 
-
+const propertyRoutes = require('./routes/propertyRoutes');
 
 dotenv.config();
 
@@ -38,6 +38,8 @@ app.use(limiter);
 
 console.log("Chargement des routes d'authentification...");
 app.use('/api/auth', authRoutes);
+app.use('/api/properties', propertyRoutes);
+
 
 
 app.get('/api/auth/profile', authMiddleware, async (req, res) => {
@@ -69,3 +71,26 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
 });
+
+
+// À ajouter temporairement dans index.js après mongoose.connect
+const seedTest = async () => {
+  const testUser = await User.findOne(); // Récupère un utilisateur existant pour l'ID owner
+  if (testUser) {
+    await Property.create({
+      title: "Villa Luxe Test",
+      description: "Magnifique villa avec piscine",
+      price: 1500, // Nombre
+      location: "Sfax",
+      address: "Route de Tunis Km 5",
+      type: "Villa",
+      surface: 250, // Nombre
+      rooms: 5,
+      images: ["https://via.placeholder.com/400"],
+      owner: testUser._id
+    });
+    console.log("Annonce de test créée !");
+  } else {
+    console.log("Aucun utilisateur trouvé pour créer une annonce.");
+  }
+};

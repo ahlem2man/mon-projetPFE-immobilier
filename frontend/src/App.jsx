@@ -15,6 +15,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword'; 
 import ResetPassword from './pages/ResetPassword';
 
+import PropertyDetail from './pages/PropertyDetail';
 const theme = createTheme({
   palette: {
     primary: { main: '#1976d2' }, 
@@ -42,6 +43,8 @@ function App() {
                 <Route path="/verify-email/:token" element={<VerifyEmail />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+                <Route path="/property/:id" element={<PropertyDetail />} />
 
                 {/*  Exemple de Route Protégée (Toute personne connectée) */}
                 <Route 
