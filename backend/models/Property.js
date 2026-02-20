@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Définition de la structure d'une annonce immobilière
 const propertySchema = new mongoose.Schema({
   title: { 
     type: String, 
@@ -27,11 +26,11 @@ const propertySchema = new mongoose.Schema({
   type: { 
     type: String, 
     required: [true, "Le type de bien est obligatoire"],
-    enum: ['Appartement', 'Villa', 'Maison', 'Studio', 'Bureau'], // Liste pour les filtres
+    enum: ['Appartement', 'Villa', 'Maison', 'Studio', 'Bureau'], 
     index: true 
   },
   surface: { 
-    type: Number // Surface en m²
+    type: Number 
   },
   rooms: { 
     type: Number, 
@@ -39,7 +38,7 @@ const propertySchema = new mongoose.Schema({
   },
   amenities: { 
     type: [String], 
-    default: [] // Exemple: ['WiFi', 'Piscine', 'Parking']
+    default: [] 
   },
   images: { 
     type: [String], 
@@ -52,15 +51,30 @@ const propertySchema = new mongoose.Schema({
   },
   owner: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', // Lien vers l'utilisateur qui a créé l'annonce
+    ref: 'User', 
     required: true 
   },
   favorites: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User' 
-  }]
+  }],
+
+  
+  coordinates: {
+    lat: { 
+      type: Number, 
+      required: [true, "La latitude est requise pour la carte"],
+      default: 36.8065 
+    },
+    lng: { 
+      type: Number, 
+      required: [true, "La longitude est requise pour la carte"],
+      default: 10.1815 
+    }
+  },
 }, { 
-  timestamps: true // Crée automatiquement createdAt et updatedAt
-});
+  timestamps: true 
+}
+);
 
 module.exports = mongoose.model('Property', propertySchema);

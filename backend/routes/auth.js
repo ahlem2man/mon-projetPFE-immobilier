@@ -5,6 +5,8 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto'); 
+const authMiddleware = require('../middleware/auth');
+
 
 
 router.post('/register', async (req, res) => {
@@ -167,6 +169,25 @@ router.post('/reset-password/:token', async (req, res) => {
     await user.save();
 
     res.json({ message: "Mot de passe modifié et compte vérifié !" });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// Route pour récupérer le profil de l'utilisateur connecté
+router.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+    res.json({ 
+      id: user._id, 
+      name: user.name, 
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified
+    });
   } catch (err) {
     res.status(500).json({ message: "Erreur serveur" });
   }

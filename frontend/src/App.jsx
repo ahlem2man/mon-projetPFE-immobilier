@@ -14,7 +14,9 @@ import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword'; 
 import ResetPassword from './pages/ResetPassword';
+import 'leaflet/dist/leaflet.css';
 
+import Favorites from './pages/Favorites';
 import PropertyDetail from './pages/PropertyDetail';
 const theme = createTheme({
   palette: {
@@ -45,6 +47,7 @@ function App() {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
 
                 <Route path="/property/:id" element={<PropertyDetail />} />
+                <Route path="/favorites" element={<Favorites />} />
 
                 {/*  Exemple de Route Protégée (Toute personne connectée) */}
                 <Route 

@@ -1,7 +1,6 @@
 const Property = require('../models/Property');
 
-// @desc    Récupérer toutes les annonces
-// @route   GET /api/properties
+
 exports.getAllProperties = async (req, res) => {
   try {
     let query = { status: 'disponible' };
@@ -29,33 +28,44 @@ exports.getAllProperties = async (req, res) => {
       query.amenities = { $all: amenitiesArray };
     }
 
-    // --- AJOUTS SPRINT 3 : TRI ET PAGINATION ---
+    // 5. Filtrage par Surface
+    if (req.query.minSurface || req.query.maxSurface) {
+      query.surface = {};
+      if (req.query.minSurface) query.surface.$gte = Number(req.query.minSurface);
+      if (req.query.maxSurface) query.surface.$lte = Number(req.query.maxSurface);
+    }
 
-    // 5. Tri (Sorting)
+    // 6. Filtrage par nombre de pièces
+    if (req.query.rooms) {
+      query.rooms = { $gte: Number(req.query.rooms) };
+    }
+
+   
+
+    // 7. Tri (Sorting)
     let sortBy = '-createdAt';
     if (req.query.sort) {
-      // .toString().trim() assure que la valeur est propre pour Mongoose
       sortBy = req.query.sort.toString().trim();
     }
 
-    // 6. Pagination
+    // 8. Pagination
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 6;
     const startIndex = (page - 1) * limit;
     const total = await Property.countDocuments(query);
 
-    // DEBUG : Regarde ton terminal Node.js pour vérifier ces valeurs
+   
     console.log("--- LOGS SERVEUR ---");
     console.log("Filtres actifs :", query);
     console.log("Tri appliqué (sortBy) :", sortBy);
 
-    // Exécution de la requête
+    
     const properties = await Property.find(query)
       .sort(sortBy)
       .skip(startIndex)
       .limit(limit);
 
-    // 7. Réponse enrichie
+    
     res.status(200).json({
       success: true,
       count: properties.length,
@@ -70,7 +80,7 @@ exports.getAllProperties = async (req, res) => {
   }
 };
 
-// @desc    Créer une annonce
+
 exports.createProperty = async (req, res) => {
   try {
     const property = await Property.create(req.body);
@@ -86,6 +96,42 @@ exports.getPropertyById = async (req, res) => {
     const property = await Property.findById(req.params.id).populate('owner', 'fullName email');
     if (!property) return res.status(404).json({ success: false, message: "Annonce non trouvée" });
     res.status(200).json({ success: true, data: property });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+exports.toggleFavorite = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ message: "Annonce non trouvée" });
+
+    
+    const isFavorite = property.favorites.includes(req.user.id);
+
+    if (isFavorite) {
+      
+      property.favorites = property.favorites.filter(id => id.toString() !== req.user.id);
+    } else {
+      
+      property.favorites.push(req.user.id);
+    }
+
+    await property.save();
+    res.status(200).json({ success: true, isFavorite: !isFavorite, count: property.favorites.length });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+exports.getFavoriteProperties = async (req, res) => {
+  try {
+   
+    const favorites = await Property.find({ favorites: req.user.id });
+    res.status(200).json({ success: true, data: favorites });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

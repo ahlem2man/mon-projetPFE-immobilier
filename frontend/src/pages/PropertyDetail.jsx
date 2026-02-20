@@ -1,27 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Container, Grid, Typography, Box, Paper, 
-  Chip, Divider, Stack, CircularProgress, IconButton 
+  Chip, Divider, Stack, CircularProgress, IconButton, Snackbar, Alert, Button
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import KingBedIcon from '@mui/icons-material/KingBed';
 import SquareFootIcon from '@mui/icons-material/SquareFoot';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { AuthContext } from '../context/AuthContext';
+import PropertyMap from '../components/PropertyMap';
 
 const PropertyDetail = () => {
   const { id } = useParams();
+  const { user } = useContext(AuthContext);
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  // ÉTAT POUR L'IMAGE SÉLECTIONNÉE
   const [selectedImage, setSelectedImage] = useState(0);
+  
+  // États pour les favoris
+  const [isFav, setIsFav] = useState(false);
+  const [loadingFav, setLoadingFav] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   useEffect(() => {
     const fetchProperty = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
         setProperty(res.data.data);
+        
+        // Vérifier si l'utilisateur a mis en favori
+        if (user?.id && res.data.data.favorites) {
+          const isAlreadyFav = res.data.data.favorites.some(favId => String(favId) === String(user.id));
+          setIsFav(isAlreadyFav);
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error("Erreur", err);
@@ -29,7 +46,58 @@ const PropertyDetail = () => {
       }
     };
     fetchProperty();
-  }, [id]);
+  }, [id, user?.id]);
+
+  // Synchroniser isFav si property.favorites change
+  useEffect(() => {
+    if (user?.id && property?.favorites) {
+      const isAlreadyFav = property.favorites.some(favId => String(favId) === String(user.id));
+      setIsFav(isAlreadyFav);
+    }
+  }, [property?.favorites, user?.id]);
+
+  // Handler pour toggle favori
+  const handleFavoriteToggle = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token || !user) {
+      setSnackbarMessage('Veuillez vous connecter pour ajouter des favoris');
+      setSnackbarSeverity('warning');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    setLoadingFav(true);
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/properties/${id}/favorite`,
+        {},
+        { headers: { 'x-auth-token': token } }
+      );
+
+      if (res.data.success) {
+        const newFavState = res.data.isFavorite;
+        setIsFav(newFavState);
+        
+        setSnackbarMessage(
+          newFavState ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris'
+        );
+        setSnackbarSeverity('success');
+        setOpenSnackbar(true);
+      }
+    } catch (err) {
+      setSnackbarMessage('Erreur lors de la modification des favoris');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      console.error("Erreur toggle favori:", err);
+    } finally {
+      setLoadingFav(false);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+  };
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
   if (!property) return <Typography variant="h5" textAlign="center" mt={10}>Annonce non trouvée</Typography>;
@@ -78,7 +146,35 @@ const PropertyDetail = () => {
         <Grid item xs={12} md={5}>
           <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
             <Stack spacing={3}>
-              <Typography variant="h4" fontWeight="bold">{property.title}</Typography>
+              {/* TITRE + BOUTON FAVORIS */}
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Typography variant="h4" fontWeight="bold" sx={{ flex: 1 }}>
+                  {property.title}
+                </Typography>
+                <IconButton
+                  onClick={handleFavoriteToggle}
+                  disabled={loadingFav}
+                  sx={{
+                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                    '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.15)' },
+                    transition: 'all 0.2s ease',
+                    '& svg': {
+                      transition: 'transform 0.2s ease',
+                    },
+                    '&:active svg': {
+                      transform: isFav ? 'scale(1.2)' : 'scale(0.95)'
+                    }
+                  }}
+                  color="error"
+                  title={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                >
+                  {isFav ? (
+                    <FavoriteIcon className="heart-icon favorite" sx={{ fontSize: 28 }} />
+                  ) : (
+                    <FavoriteBorderIcon className="heart-icon" sx={{ fontSize: 28 }} />
+                  )}
+                </IconButton>
+              </Stack>
               
               <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
                 <LocationOnIcon color="primary" />
@@ -86,7 +182,7 @@ const PropertyDetail = () => {
               </Stack>
 
               <Typography variant="h4" color="primary" fontWeight="bold">
-                {property.price.toLocaleString()} DT <Typography component="span" variant="body1" color="text.secondary">/ mois</Typography>
+                {property.price.toLocaleString()} € <Typography component="span" variant="body1" color="text.secondary">/ mois</Typography>
               </Typography>
 
               <Divider />
@@ -122,10 +218,67 @@ const PropertyDetail = () => {
                   ))}
                 </Box>
               </Box>
+
+              {/* Note sur les favoris */}
+              {user ? (
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: isFav ? '#ffebee' : '#f5f5f5', 
+                  borderRadius: 1,
+                  border: `1px solid ${isFav ? '#ffcdd2' : '#e0e0e0'}`
+                }}>
+                  <Typography variant="body2" sx={{ color: isFav ? '#c62828' : '#666' }}>
+                    {isFav ? '❤️ Cette propriété est dans vos favoris' : '💚 Ajoutez cette propriété à vos favoris'}
+                  </Typography>
+                </Box>
+              ) : (
+                <Box sx={{ p: 2, bgcolor: '#e3f2fd', borderRadius: 1, border: '1px solid #bbdefb' }}>
+                  <Typography variant="body2" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                    📌 Connectez-vous pour ajouter aux favoris
+                  </Typography>
+                </Box>
+              )}
             </Stack>
           </Paper>
         </Grid>
       </Grid>
+
+     {/* SECTION CARTE */}
+      <Box sx={{ mt: 6 }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+          📍 Localisation
+        </Typography>
+        
+        {/* Afficher la carte avec la localisation correcte de la ville */}
+        {property.coordinates || property.location ? (
+          <PropertyMap 
+            lat={property.coordinates?.lat} 
+            lng={property.coordinates?.lng} 
+            title={property.title}
+            location={property.location}
+          />
+        ) : (
+          <Alert severity="info">
+            L'emplacement exact sur la carte n'a pas encore été renseigné pour cette propriété.
+          </Alert>
+        )}
+      </Box>
+
+      {/* Snackbar pour les notifications */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

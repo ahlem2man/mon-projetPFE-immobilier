@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Container, Grid, Typography, Box, CircularProgress, 
-  Pagination, MenuItem, TextField 
+  Pagination, MenuItem, TextField, Drawer, IconButton
 } from '@mui/material';
-import SearchBar from '../components/SearchBar';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import PropertyCard from '../components/PropertyCard';
+import FilterSidebar from '../components/FilterSidebar';
+import API_BASE_URL from '../config/api';
 
 const Home = () => {
   // --- ÉTATS (STATES) ---
@@ -17,6 +19,7 @@ const Home = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [sort, setSort] = useState('-createdAt');
   const [currentFilters, setCurrentFilters] = useState({});
+  const [openFilters, setOpenFilters] = useState(false);
 
   // --- LOGIQUE DE RÉCUPÉRATION ---
   const fetchProperties = async (filters = {}, activePage = 1, activeSort = '-createdAt') => {
@@ -51,10 +54,18 @@ const Home = () => {
   }, [page, sort]);
 
   // --- GESTIONNAIRES ---
-  const handleSearch = (searchData) => {
-    setCurrentFilters(searchData);
+  const handleApplyFilters = (filters) => {
+    setCurrentFilters(filters);
     setPage(1);
-    fetchProperties(searchData, 1, sort);
+    setOpenFilters(false); // Fermer le drawer
+    fetchProperties(filters, 1, sort);
+  };
+
+  const handleClearFilters = () => {
+    setCurrentFilters({});
+    setPage(1);
+    setOpenFilters(false); // Fermer le drawer
+    fetchProperties({}, 1, sort);
   };
 
   const handleSortChange = (e) => {
@@ -80,13 +91,26 @@ const Home = () => {
       </Box>
 
       <Container sx={{ mb: 8 }}>
-        <SearchBar onSearch={handleSearch} />
-
-        {/* LIGNE DE TRI */}
+        {/* LIGNE DE TITRE + BOUTON FILTRES + TRI */}
         <Box sx={{ mt: 6, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Typography variant="h4" sx={{ fontWeight: 'medium' }}>
-            Propriétés récentes
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+              Propriétés disponibles
+            </Typography>
+            <IconButton
+              onClick={() => setOpenFilters(true)}
+              sx={{
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': { bgcolor: 'primary.dark' },
+                width: 45,
+                height: 45
+              }}
+              title="Ouvrir les filtres"
+            >
+              <FilterListIcon />
+            </IconButton>
+          </Box>
 
           <TextField
             select
@@ -109,8 +133,8 @@ const Home = () => {
           </Box>
         ) : (
           <>
-            {/* Version Grid standard compatible avec ton projet */}
-            <Grid container spacing={4}>
+            {/* LISTE DES PROPRIÉTÉS */}
+            <Grid container spacing={3}>
               {properties.length > 0 ? (
                 properties.map((property) => (
                   <Grid item key={property._id} xs={12} sm={6} md={4}>
@@ -126,7 +150,7 @@ const Home = () => {
               )}
             </Grid>
 
-            {/* Pagination */}
+            {/* PAGINATION */}
             {properties.length > 0 && (
               <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
                 <Pagination 
@@ -143,6 +167,48 @@ const Home = () => {
           </>
         )}
       </Container>
+
+      {/* DRAWER - FILTRES LATÉRAL */}
+      <Drawer
+        anchor="left"
+        open={openFilters}
+        onClose={() => setOpenFilters(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: { xs: '100%', sm: 350 },
+            maxHeight: '100%',
+            overflowY: 'auto'
+          }
+        }}
+      >
+        {/* En-tête du drawer */}
+        <Box sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white', 
+          p: 2.5, 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1.5,
+          fontWeight: 'bold'
+        }}>
+          <FilterListIcon sx={{ fontSize: 28 }} />
+          <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: 0.5, flex: 1 }}>
+            Filtres
+          </Typography>
+          <IconButton 
+            onClick={() => setOpenFilters(false)}
+            sx={{ color: 'white' }}
+          >
+            ✕
+          </IconButton>
+        </Box>
+
+        {/* Contenu des filtres */}
+        <FilterSidebar 
+          onApplyFilters={handleApplyFilters}
+          onClearFilters={handleClearFilters}
+        />
+      </Drawer>
     </Box>
   );
 };

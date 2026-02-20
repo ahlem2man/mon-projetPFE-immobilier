@@ -7,12 +7,10 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    
     useEffect(() => {
         const loadUser = async () => {
             const token = localStorage.getItem('token');
             if (token) {
-               
                 axios.defaults.headers.common['x-auth-token'] = token;
                 try {
                     const res = await axios.get('http://localhost:5000/api/auth/profile');
@@ -27,18 +25,28 @@ export const AuthProvider = ({ children }) => {
         loadUser();
     }, []);
 
-   
     const login = async (email, password) => {
         const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
         localStorage.setItem('token', res.data.token);
+        
+        // Sauvegarde aussi l'utilisateur pour accès rapide
+        const userData = { 
+            id: res.data.user.id, 
+            name: res.data.user.name, 
+            email: res.data.user.email,
+            role: res.data.user.role,
+            isVerified: res.data.user.isVerified 
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        
         axios.defaults.headers.common['x-auth-token'] = res.data.token;
         setUser(res.data.user);
         return res.data;
     };
 
-   
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         delete axios.defaults.headers.common['x-auth-token'];
         setUser(null);
     };
