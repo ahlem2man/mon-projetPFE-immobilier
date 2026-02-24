@@ -11,6 +11,8 @@ const authMiddleware = require('./middleware/auth');
 const User = require('./models/User'); 
 const Property = require('./models/Property'); 
 const propertyRoutes = require('./routes/propertyRoutes');
+const tenantRoutes = require('./routes/tenantRoutes');
+
 
 dotenv.config();
 
@@ -44,8 +46,8 @@ app.use(limiter);
 console.log("Chargement des routes d'authentification...");
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
-
-
+app.use('/api/tenant', tenantRoutes);
+app.use('/uploads', express.static('uploads'));
 
 app.get('/api/auth/profile', authMiddleware, async (req, res) => {
   try {

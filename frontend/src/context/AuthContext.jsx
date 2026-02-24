@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
         localStorage.setItem('token', res.data.token);
         
-        // Sauvegarde aussi l'utilisateur pour accès rapide
+        
         const userData = { 
             id: res.data.user.id, 
             name: res.data.user.name, 
@@ -49,6 +49,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
         delete axios.defaults.headers.common['x-auth-token'];
         setUser(null);
+        
+        // --- AJOUT DE LA REDIRECTION VERS L'ACCUEIL ---
+        window.location.href = '/'; 
     };
 
     return (

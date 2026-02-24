@@ -18,6 +18,12 @@ import 'leaflet/dist/leaflet.css';
 
 import Favorites from './pages/Favorites';
 import PropertyDetail from './pages/PropertyDetail';
+import DashboardLayout from './pages/Dashboard/DashboardLayout';
+import ProfilePage from './pages/Dashboard/ProfilePage';
+import PreferencesPage from './pages/Dashboard/PreferencesPage';
+import DocumentsPage from './pages/Dashboard/DocumentsPage';
+
+
 const theme = createTheme({
   palette: {
     primary: { main: '#1976d2' }, 
@@ -48,6 +54,14 @@ function App() {
 
                 <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/favorites" element={<Favorites />} />
+
+                <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="preferences" element={<PreferencesPage />} />
+                <Route path="documents" element={<DocumentsPage />} />
+                </Route>
+
+
 
                 {/*  Exemple de Route Protégée (Toute personne connectée) */}
                 <Route 
