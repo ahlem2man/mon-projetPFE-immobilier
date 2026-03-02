@@ -3,6 +3,7 @@ const router = express.Router();
 const Tenant = require('../models/Tenant');
 const upload = require('../middleware/upload');
 const protect = require('../middleware/auth'); // Ton middleware d'auth du Sprint 2
+const calculateCompletion = require('../utils/calculateCompletion'); // Importance: Calcul de complétude Sprint 4 Étape 8
 
 // 1. Récupérer le profil du locataire connecté
 router.get('/me', protect, async (req, res) => {
@@ -50,6 +51,11 @@ router.put('/profile', protect, async (req, res) => {
       { new: true, upsert: true }
     );
     
+    // Calculer et mettre à jour la complétude (Étape 8)
+    const completion = calculateCompletion(updatedTenant);
+    updatedTenant.completionPercentage = completion;
+    await updatedTenant.save();
+    
     console.log('[PUT /profile] Tenant après update:', updatedTenant);
     res.json(updatedTenant);
   } catch (error) {
@@ -73,16 +79,17 @@ router.put('/update', protect, async (req, res) => {
     if (employmentType) updateData.employmentType = employmentType;
     if (employer) updateData.employer = employer;
     
-    // Logique de calcul simple de complétude (ancien comportement)
-    const fields = ['profession', 'income', 'preferences.location', 'preferences.budgetMax'];
-    let filled = 0;
-    fields.forEach(f => { if (req.body[f]) filled++; });
-    const completion = Math.round((filled / fields.length) * 100);
-
+    // Récupérer le tenant pour calculer la complétude (Étape 8)
+    let tenant = await Tenant.findOneAndUpdate(
+      { userId: req.user.id },
+      { $set: updateData },
+      { new: true, upsert: true }
+    );
+    const completion = calculateCompletion(tenant);
     const updatedTenant = await Tenant.findOneAndUpdate(
       { userId: req.user.id },
-      { $set: { ...updateData, completionPercentage: completion } },
-      { new: true, upsert: true }
+      { $set: { completionPercentage: completion } },
+      { new: true }
     );
     res.json(updatedTenant);
   } catch (error) {
@@ -134,7 +141,7 @@ router.post('/upload-docs', protect, upload.fields([
     console.log('[POST /upload-docs] updateData:', updateData);
 
     // Mise à jour du locataire (avec upsert pour créer s'il n'existe pas)
-    const tenant = await Tenant.findOneAndUpdate(
+    let tenant = await Tenant.findOneAndUpdate(
       { userId: req.user.id },
       { $set: updateData },
       { new: true, upsert: true }
@@ -146,13 +153,137 @@ router.post('/upload-docs', protect, upload.fields([
       return res.status(500).json({ message: "Erreur lors de la création/mise à jour du profil" });
     }
 
+    // Recalculer la complétude après upload de documents (Étape 8)
+    const completion = calculateCompletion(tenant);
+    tenant = await Tenant.findOneAndUpdate(
+      { userId: req.user.id },
+      { $set: { completionPercentage: completion } },
+      { new: true }
+    );
+
     res.json({ 
       message: "Dossier locatif complet mis à jour avec succès", 
-      documents: tenant.documents 
+      documents: tenant.documents,
+      completionPercentage: tenant.completionPercentage
     });
   } catch (error) {
     console.error('[POST /upload-docs] Erreur:', error);
     res.status(400).json({ message: error.message });
+  }
+});
+
+
+// Sauvegarder une nouvelle recherche (Étape 9)
+router.post('/save-search', protect, async (req, res) => {
+  try {
+    const { label, filters } = req.body;
+    
+    const tenant = await Tenant.findOneAndUpdate(
+      { userId: req.user.id || req.user._id },
+      { $push: { savedSearches: { label, filters } } },
+      { new: true }
+    );
+
+    res.json({ message: "Recherche sauvegardée !", savedSearches: tenant.savedSearches });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Supprimer une recherche sauvegardée (Étape 9)
+router.delete('/delete-search/:searchId', protect, async (req, res) => {
+  try {
+    const { searchId } = req.params;
+
+    const tenant = await Tenant.findOneAndUpdate(
+      { userId: req.user.id || req.user._id },
+      { $pull: { savedSearches: { _id: searchId } } },
+      { new: true }
+    );
+
+    res.json({ message: "Recherche supprimée !", savedSearches: tenant.savedSearches });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Récupérer une recherche sauvegardée spécifique (pour relancer)
+router.get('/search/:searchId', protect, async (req, res) => {
+  try {
+    const { searchId } = req.params;
+
+    const tenant = await Tenant.findOne(
+      { userId: req.user.id || req.user._id },
+      { savedSearches: { $elemMatch: { _id: searchId } } }
+    );
+
+    if (!tenant || tenant.savedSearches.length === 0) {
+      return res.status(404).json({ message: "Recherche non trouvée" });
+    }
+
+    res.json(tenant.savedSearches[0]); // Retourne les filtres de la recherche
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ========== ROUTES FAVORIS (Étape 10) ==========
+
+// Récupérer la liste des IDs de propriétés favorites
+router.get('/favorites', protect, async (req, res) => {
+  try {
+    const tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
+    res.json(tenant?.favoriteProperties || []);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Ajouter une propriété aux favoris
+router.post('/favorites/:propertyId', protect, async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+
+    const tenant = await Tenant.findOneAndUpdate(
+      { userId: req.user.id || req.user._id },
+      { $addToSet: { favoriteProperties: propertyId } }, // $addToSet évite les doublons
+      { new: true }
+    );
+
+    res.json({ message: "Propriété ajoutée aux favoris !", favorites: tenant.favoriteProperties });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Supprimer une propriété des favoris
+router.delete('/favorites/:propertyId', protect, async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+
+    const tenant = await Tenant.findOneAndUpdate(
+      { userId: req.user.id || req.user._id },
+      { $pull: { favoriteProperties: propertyId } },
+      { new: true }
+    );
+
+    res.json({ message: "Propriété supprimée des favoris !", favorites: tenant.favoriteProperties });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Vérifier si une propriété est en favoris
+router.get('/favorites/check/:propertyId', protect, async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+
+    const tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
+    const isFavorite = tenant?.favoriteProperties?.includes(propertyId) || false;
+
+    res.json({ isFavorite });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 

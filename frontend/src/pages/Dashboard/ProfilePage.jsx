@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Paper, Grid, LinearProgress, MenuItem, Stack } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Grid, MenuItem, Stack, Alert, AlertTitle } from '@mui/material';
 import axios from 'axios';
+import SaveIcon from '@mui/icons-material/Save';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState({
@@ -10,6 +11,7 @@ export default function ProfilePage() {
     employer: ''
   });
   const [completion, setCompletion] = useState(0);
+  const [saved, setSaved] = useState(false);
 
   // Charger les données existantes
   useEffect(() => {
@@ -40,14 +42,16 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaved(false);
     try {
       const res = await axios.put('http://localhost:5000/api/tenant/profile', profile, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setCompletion(res.data.completionPercentage);
-      alert('Profil mis à jour !');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      alert('Erreur lors de la mise à jour');
+      console.error('Error:', err);
     }
   };
 
@@ -57,28 +61,18 @@ export default function ProfilePage() {
         Mon Profil Locataire
       </Typography>
 
-      {/* Indicateur de complétude */}
-      <Paper sx={{ p: 3, mb: 4, borderRadius: 3 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-            Complétude du profil
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#00adef', fontWeight: 'bold' }}>
-            {completion}%
-          </Typography>
-        </Stack>
-        <LinearProgress 
-          variant="determinate" 
-          value={completion} 
-          sx={{ height: 10, borderRadius: 5, bgcolor: '#e0e0e0', '& .MuiLinearProgress-bar': { bgcolor: '#00adef' } }} 
-        />
-        <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-          Un profil à 100% augmente vos chances de trouver un logement rapidement.
-        </Typography>
-      </Paper>
+      {saved && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          <AlertTitle>Succès</AlertTitle>
+          Votre profil a été mis à jour avec succès ! Complétude: <strong>{completion}%</strong>
+        </Alert>
+      )}
 
-      {/* Formulaire de profil */}
-      <Paper sx={{ p: 4, borderRadius: 3 }}>
+      {/* Formulaire d'infos professionnelles */}
+      <Paper sx={{ p: 4, borderRadius: 3, mb: 4 }}>
+        <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: '#0a1930' }}>
+           Informations Professionnelles
+        </Typography>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
@@ -86,9 +80,11 @@ export default function ProfilePage() {
                 fullWidth
                 label="Profession"
                 name="profession"
+                placeholder="Ex: Ingénieur, Enseignant..."
                 value={profile.profession}
-                onChange={handleChange}
+                onChange={(e) => handleChange(e)}
                 variant="outlined"
+                helperText={profile.profession ? '✓' : 'Requis pour la complétude'}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -98,7 +94,7 @@ export default function ProfilePage() {
                 label="Type de contrat"
                 name="employmentType"
                 value={profile.employmentType}
-                onChange={handleChange}
+                onChange={(e) => handleChange(e)}
               >
                 {['CDI', 'CDD', 'Indépendant', 'Étudiant', 'Autre'].map((option) => (
                   <MenuItem key={option} value={option}>{option}</MenuItem>
@@ -110,9 +106,12 @@ export default function ProfilePage() {
                 fullWidth
                 label="Revenus mensuels nets (€)"
                 name="income"
+                placeholder="Ex: 2500"
                 type="number"
                 value={profile.income}
-                onChange={handleChange}
+                onChange={(e) => handleChange(e)}
+                variant="outlined"
+                helperText={profile.income > 0 ? '✓' : 'Important pour les propriétaires'}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -120,15 +119,26 @@ export default function ProfilePage() {
                 fullWidth
                 label="Employeur / École"
                 name="employer"
+                placeholder="Ex: Google, Université Paris-Diderot..."
                 value={profile.employer}
-                onChange={handleChange}
+                onChange={(e) => handleChange(e)}
+                variant="outlined"
               />
             </Grid>
             <Grid item xs={12}>
               <Button 
                 type="submit" 
                 variant="contained" 
-                sx={{ bgcolor: '#0a1930', px: 4, py: 1.5, borderRadius: '50px', textTransform: 'none' }}
+                startIcon={<SaveIcon />}
+                sx={{ 
+                  bgcolor: '#0a1930', 
+                  px: 4, 
+                  py: 1.5, 
+                  borderRadius: '50px', 
+                  textTransform: 'none',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#162c50' }
+                }}
               >
                 Enregistrer les modifications
               </Button>
@@ -136,6 +146,19 @@ export default function ProfilePage() {
           </Grid>
         </form>
       </Paper>
+
+      {/* Info: Prochaines étapes */}
+      {completion < 100 && (
+        <Alert severity="info" sx={{ borderRadius: 2 }}>
+          <AlertTitle>Prochaines étapes</AlertTitle>
+          Pour compléter votre profil:
+          <ul style={{ marginTop: 8 }}>
+            <li>Allez à <strong>Préférences</strong> pour indiquer votre budget et localisation</li>
+            <li>Allez à <strong>Documents</strong> pour uploader vos justificatifs (identité, revenus, domicile)</li>
+            <li>Révisitez cette page pour vérifier votre progression</li>
+          </ul>
+        </Alert>
+      )}
     </Box>
   );
 }

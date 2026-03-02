@@ -12,27 +12,36 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
   const { user } = useContext(AuthContext);
   
   // États pour les favoris et notifications
-  const [isFav, setIsFav] = useState(() => {
-    if (user?.id && property?.favorites) {
-      return property.favorites.some(favId => String(favId) === String(user.id));
-    }
-    return false;
-  });
+  const [isFav, setIsFav] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-  // Synchronisation si les données changent
+  // Charger l'état des favoris depuis l'API Sprint 4
   useEffect(() => {
-    if (user?.id && property?.favorites) {
-      const isAlreadyFav = property.favorites.some(
-        (favId) => String(favId) === String(user.id)
-      );
-      setIsFav(isAlreadyFav);
-    }
-  }, [property.favorites, user?.id]);
+    const checkFavorite = async () => {
+      const token = localStorage.getItem('token');
+      if (!token || !user?.id) {
+        setIsFav(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/tenant/favorites/check/${property._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsFav(res.data.isFavorite || false);
+      } catch (error) {
+        console.error('Erreur lors de la vérification des favoris:', error);
+        setIsFav(false);
+      }
+    };
+
+    checkFavorite();
+  }, [property._id, user?.id]);
 
   const handleDetailsClick = () => {
     navigate(`/property/${property._id}`);
@@ -52,26 +61,32 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
 
     setLoading(true);
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/properties/${property._id}/favorite`, 
-        {}, 
-        { headers: { 'x-auth-token': token } }
-      );
+      // Utilise l'API Sprint 4 : POST ou DELETE selon l'état actuel
+      const method = isFav ? 'delete' : 'post';
+      const endpoint = `http://localhost:5000/api/tenant/favorites/${property._id}`;
       
-      if (res.data.success) {
-        const newFavState = res.data.isFavorite;
-        setIsFav(newFavState);
-        
-        setSnackbarMessage(
-          newFavState ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris'
-        );
-        setSnackbarSeverity('success');
-        setOpenSnackbar(true);
-        
-        // Callback pour rafraîchir la liste si nécessaire
-        if (onFavoriteChange) {
-          onFavoriteChange(property._id, newFavState);
-        }
+      if (isFav) {
+        await axios.delete(endpoint, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        await axios.post(endpoint, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      const newFavState = !isFav;
+      setIsFav(newFavState);
+      
+      setSnackbarMessage(
+        newFavState ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris'
+      );
+      setSnackbarSeverity('success');
+      setOpenSnackbar(true);
+      
+      // Callback pour rafraîchir la liste si nécessaire
+      if (onFavoriteChange) {
+        onFavoriteChange(property._id, newFavState);
       }
     } catch (err) {
       setSnackbarMessage('Erreur lors de la modification des favoris');
@@ -120,9 +135,9 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
             color="error"
           >
             {isFav ? (
-              <FavoriteIcon className="heart-icon favorite" /> 
+              <FavoriteIcon className="heart-icon favorite" sx={{ color: '#ff5252' }} /> 
             ) : (
-              <FavoriteBorderIcon className="heart-icon" />
+              <FavoriteBorderIcon className="heart-icon" sx={{ color: '#ff5252' }} />
             )}
           </IconButton>
         </div>

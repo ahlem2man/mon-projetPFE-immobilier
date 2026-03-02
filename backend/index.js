@@ -60,7 +60,12 @@ app.get('/api/auth/profile', authMiddleware, async (req, res) => {
 });
 
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  maxPoolSize: 10,
+  minPoolSize: 2,
+})
   .then(async () => {
     console.log("Connecté à MongoDB avec succès"); 
     
@@ -70,20 +75,25 @@ mongoose.connect(process.env.MONGO_URI)
     } catch (err) {
       console.error("Erreur lors du test du modèle Property:", err);
     }
+    
+    // DÉMARRER LE SERVEUR SEULEMENT APRÈS LA CONNEXION
+    const PORT = process.env.PORT || 5000;
+    if (!process.env.VERCEL) {
+      app.listen(PORT, () => {
+        console.log(`Serveur démarré sur le port ${PORT}`);
+      });
+    }
   })
-  .catch(err => console.error("Erreur de connexion MongoDB:", err));
+  .catch(err => {
+    console.error("Erreur de connexion MongoDB:", err);
+    process.exit(1);
+  });
 
 
 const PORT = process.env.PORT || 5000;
 
 if (process.env.VERCEL) {
-  
   module.exports = app;
-} else {
-  
-  app.listen(PORT, () => {
-    console.log(`Serveur démarré sur le port ${PORT}`);
-  });
 }
 
 

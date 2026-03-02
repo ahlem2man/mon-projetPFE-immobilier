@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, Paper, Button, Grid, 
   Container, IconButton, LinearProgress, Snackbar, Alert, 
@@ -17,6 +17,8 @@ const DocumentsPage = () => {
     hasGuarantee: false,
     guaranteeDetails: ''
   });
+
+  const [completion, setCompletion] = useState(0);
 
   // Documents structurés selon les critères complets
   const [documents, setDocuments] = useState({
@@ -45,6 +47,30 @@ const DocumentsPage = () => {
     message: '',
     severity: 'success'
   });
+
+  // Charger le profil au démarrage (Étape 8)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/tenant/me', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.data) {
+          setCompletion(res.data.completionPercentage || 0);
+          if (res.data.professionalStatus) {
+            setApplicantProfile({
+              professionalStatus: res.data.professionalStatus.status || '',
+              hasGuarantee: res.data.professionalStatus.hasGuarantee || false,
+              guaranteeDetails: res.data.professionalStatus.guaranteeDetails || ''
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
@@ -136,9 +162,14 @@ const DocumentsPage = () => {
         }
       );
 
+      // Mettre à jour la complétude (Étape 8)
+      if (response.data.completionPercentage !== undefined) {
+        setCompletion(response.data.completionPercentage);
+      }
+
       // Le backend renvoie "message", on l'affiche
       if (response.status === 200 || response.data.message) {
-        showNotify('Félicitations ! Votre dossier locatif a été transmis et enregistré avec succès !', 'success');
+        showNotify(`Félicitations ! Votre dossier locatif a été transmis ! Complétude: ${response.data.completionPercentage || completion}%`, 'success');
       }
     } catch (err) {
       console.error("Erreur détaillée :", err.response?.data);
@@ -158,6 +189,7 @@ const DocumentsPage = () => {
           Complétez votre profil et uploadez vos documents au format PDF ou JPG (Max 5Mo par fichier).
         </Typography>
       </Box>
+
 
       {/* SECTION 1 : SITUATION PROFESSIONNELLE ET GARANT */}
       <Paper 

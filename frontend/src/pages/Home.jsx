@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { 
-  Container, Grid, Typography, Box, CircularProgress, 
-  Pagination, MenuItem, TextField, Drawer, IconButton
+  Container, Grid, Typography, Box, CircularProgress, Stack,
+  Pagination, MenuItem, TextField, Drawer, IconButton, Button, Dialog,
+  DialogTitle, DialogContent, DialogActions, Alert
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import SaveIcon from '@mui/icons-material/Save';
 import PropertyCard from '../components/PropertyCard';
 import FilterSidebar from '../components/FilterSidebar';
 import API_BASE_URL from '../config/api';
@@ -20,6 +23,12 @@ const Home = () => {
   const [sort, setSort] = useState('-createdAt');
   const [currentFilters, setCurrentFilters] = useState({});
   const [openFilters, setOpenFilters] = useState(false);
+
+  // États pour sauvegarde de recherche
+  const [openSaveSearch, setOpenSaveSearch] = useState(false);
+  const [searchLabel, setSearchLabel] = useState('');
+  const [savingSearch, setSavingSearch] = useState(false);
+  const [alertMsg, setAlertMsg] = useState(null);
 
   // --- LOGIQUE DE RÉCUPÉRATION ---
   const fetchProperties = async (filters = {}, activePage = 1, activeSort = '-createdAt') => {
@@ -68,6 +77,46 @@ const Home = () => {
     fetchProperties({}, 1, sort);
   };
 
+  const handleSaveSearch = async () => {
+    if (!searchLabel.trim()) {
+      setAlertMsg('Veuillez entrer un nom pour la recherche');
+      return;
+    }
+
+    try {
+      setSavingSearch(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setAlertMsg('Vous devez être connecté pour sauvegarder une recherche');
+        return;
+      }
+
+      // Préparer les filtres pour la sauvegarde
+      const filters = {
+        location: currentFilters.location || '',
+        budgetMax: currentFilters.maxPrice || 0,
+        propertyType: currentFilters.type || 'Tous',
+        minRooms: currentFilters.minRooms || 0
+      };
+
+      await axios.post(
+        'http://localhost:5000/api/tenant/save-search',
+        { label: searchLabel, filters },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setAlertMsg('Recherche sauvegardée ! Retrouvez-la dans votre dashboard');
+      setSearchLabel('');
+      setOpenSaveSearch(false);
+    } catch (error) {
+      setAlertMsg('Erreur lors de la sauvegarde de la recherche');
+      console.error(error);
+    } finally {
+      setSavingSearch(false);
+    }
+  };
+
   const handleSortChange = (e) => {
     const newSortValue = e.target.value;
     console.log("Nouveau tri sélectionné :", newSortValue);
@@ -78,38 +127,156 @@ const Home = () => {
 
   return (
     <Box>
-      {/* Hero Section */}
-      <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 8, textAlign: 'center', mb: 4 }}>
-        <Container>
-          <Typography variant="h3" fontWeight="bold" gutterBottom>
-            Trouvez votre futur foyer
+      {/* HERO SECTION */}
+      <Box 
+        sx={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&h=600&fit=crop")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          py: { xs: 10, md: 16 },
+          textAlign: 'center',
+          mb: 8,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.5) 100%)', zIndex: 0 }} />
+        
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+          <Typography 
+            variant="h2" 
+            fontWeight="bold" 
+            gutterBottom
+            sx={{
+              fontSize: { xs: '2rem', sm: '2.5rem', md: '3.5rem' },
+              lineHeight: 1.2,
+              mb: 2,
+              color: '#ffffff',
+              letterSpacing: '-1px',
+              textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            Le logement que vous voulez, sans les démarches que vous redoutez.
           </Typography>
-          <Typography variant="h6">
-            Des milliers d'annonces vérifiées par nos agences partenaires
+          <Typography 
+            variant="h6" 
+            sx={{
+              fontSize: { xs: '0.95rem', md: '1.1rem' },
+              fontWeight: 400,
+              mb: 4,
+              color: '#ffffff',
+              maxWidth: 600,
+              mx: 'auto',
+              lineHeight: 1.6,
+              textShadow: '0 1px 4px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            Trouvez le logement idéal avec nos services personnalisés et un accompagnement sur mesure.
           </Typography>
+          
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'center', mt: 4 }}>
+            <Button
+              component={Link}
+              to="/register"
+              size="large"
+              sx={{
+                background: '#ffffff',
+                color: '#0a1930',
+                px: 4,
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: '600',
+                borderRadius: 3,
+                textTransform: 'none',
+                transition: 'all 0.3s ease',
+                border: '2px solid #ffffff',
+                '&:hover': {
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                }
+              }}
+            >
+              Trouver mon logement
+            </Button>
+            <Button
+              size="large"
+              sx={{
+                background: '#ffffff',
+                color: '#00bcd4',
+                px: 4,
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: '600',
+                borderRadius: 3,
+                textTransform: 'none',
+                transition: 'all 0.3s ease',
+                border: 'none',
+                '&:hover': {
+                  background: '#f5f5f5',
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
+                }
+              }}
+            >
+              Découvrir
+            </Button>
+          </Stack>
         </Container>
       </Box>
 
-      <Container sx={{ mb: 8 }}>
-        {/* LIGNE DE TITRE + BOUTON FILTRES + TRI */}
-        <Box sx={{ mt: 6, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+      <Container maxWidth="lg" sx={{ mb: 8 }}>
+        {alertMsg && (
+          <Alert 
+            severity={alertMsg.includes('Erreur') ? 'error' : 'success'} 
+            onClose={() => setAlertMsg(null)} 
+            sx={{ mb: 3, borderRadius: 2 }}
+          >
+            {alertMsg}
+          </Alert>
+        )}
+
+        {/* TITRE + FILTRES + TRI */}
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h4" sx={{ fontWeight: '700', color: '#0a1930' }}>
               Propriétés disponibles
             </Typography>
             <IconButton
               onClick={() => setOpenFilters(true)}
               sx={{
-                bgcolor: 'primary.main',
+                bgcolor: '#00BCD4',
                 color: 'white',
-                '&:hover': { bgcolor: 'primary.dark' },
+                '&:hover': { 
+                  bgcolor: '#0097A7',
+                  transform: 'scale(1.05)',
+                },
                 width: 45,
-                height: 45
+                height: 45,
+                transition: 'all 0.2s',
               }}
-              title="Ouvrir les filtres"
             >
               <FilterListIcon />
             </IconButton>
+            {Object.keys(currentFilters).length > 0 && (
+              <Button 
+                startIcon={<SaveIcon />}
+                variant="outlined"
+                size="small"
+                onClick={() => setOpenSaveSearch(true)}
+                sx={{
+                  borderColor: '#00BCD4',
+                  color: '#00BCD4',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 188, 212, 0.05)',
+                  }
+                }}
+              >
+                Sauvegarder
+              </Button>
+            )}
           </Box>
 
           <TextField
@@ -129,11 +296,11 @@ const Home = () => {
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 10 }}>
-            <CircularProgress />
+            <CircularProgress sx={{ color: '#00BCD4' }} />
           </Box>
         ) : (
           <>
-            {/* LISTE DES PROPRIÉTÉS */}
+            {/* GRILLE DE PROPRIÉTÉS */}
             <Grid container spacing={3}>
               {properties.length > 0 ? (
                 properties.map((property) => (
@@ -143,9 +310,11 @@ const Home = () => {
                 ))
               ) : (
                 <Grid item xs={12}>
-                  <Typography variant="h6" color="textSecondary" textAlign="center" sx={{ mt: 4 }}>
-                    Aucune propriété ne correspond à vos critères.
-                  </Typography>
+                  <Box sx={{ textAlign: 'center', py: 6, bgcolor: '#f8f9fa', borderRadius: 2 }}>
+                    <Typography variant="h6" color="textSecondary">
+                      Aucune propriété ne correspond à vos critères.
+                    </Typography>
+                  </Box>
                 </Grid>
               )}
             </Grid>
@@ -168,7 +337,7 @@ const Home = () => {
         )}
       </Container>
 
-      {/* DRAWER - FILTRES LATÉRAL */}
+      {/* DRAWER - FILTRES */}
       <Drawer
         anchor="left"
         open={openFilters}
@@ -177,13 +346,13 @@ const Home = () => {
           '& .MuiDrawer-paper': {
             width: { xs: '100%', sm: 350 },
             maxHeight: '100%',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.1)',
           }
         }}
       >
-        {/* En-tête du drawer */}
         <Box sx={{ 
-          bgcolor: 'primary.main', 
+          background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
           color: 'white', 
           p: 2.5, 
           display: 'flex', 
@@ -193,7 +362,7 @@ const Home = () => {
         }}>
           <FilterListIcon sx={{ fontSize: 28 }} />
           <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: 0.5, flex: 1 }}>
-            Filtres
+            Affiner votre recherche
           </Typography>
           <IconButton 
             onClick={() => setOpenFilters(false)}
@@ -203,12 +372,49 @@ const Home = () => {
           </IconButton>
         </Box>
 
-        {/* Contenu des filtres */}
         <FilterSidebar 
           onApplyFilters={handleApplyFilters}
           onClearFilters={handleClearFilters}
         />
       </Drawer>
+
+      {/* DIALOG - SAUVEGARDER LA RECHERCHE */}
+      <Dialog open={openSaveSearch} onClose={() => setOpenSaveSearch(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold', color: '#0a1930' }}>
+          Sauvegarder cette recherche
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            Donnez un nom à cette recherche pour la retrouver rapidement plus tard dans votre dashboard
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Nom de la recherche"
+            placeholder="Ex: T3 à Lyon, Budget: 800€"
+            value={searchLabel}
+            onChange={(e) => setSearchLabel(e.target.value)}
+            variant="outlined"
+            onKeyPress={(e) => e.key === 'Enter' && handleSaveSearch()}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenSaveSearch(false)}>Annuler</Button>
+          <Button 
+            onClick={handleSaveSearch} 
+            variant="contained"
+            disabled={savingSearch}
+            sx={{
+              background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #0097A7 0%, #006064 100%)',
+              }
+            }}
+          >
+            Sauvegarder
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

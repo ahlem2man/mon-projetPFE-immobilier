@@ -1,7 +1,8 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { AuthProvider } from './context/AuthContext';
+import theme from './theme';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -22,14 +23,8 @@ import DashboardLayout from './pages/Dashboard/DashboardLayout';
 import ProfilePage from './pages/Dashboard/ProfilePage';
 import PreferencesPage from './pages/Dashboard/PreferencesPage';
 import DocumentsPage from './pages/Dashboard/DocumentsPage';
-
-
-const theme = createTheme({
-  palette: {
-    primary: { main: '#1976d2' }, 
-    secondary: { main: '#f50057' },
-  },
-});
+import SearchesPage from './pages/Dashboard/SearchesPage';
+import FavoritesPage from './pages/Dashboard/FavoritesPage';
 
 function App() {
   return (
@@ -56,9 +51,11 @@ function App() {
                 <Route path="/favorites" element={<Favorites />} />
 
                 <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="preferences" element={<PreferencesPage />} />
-                <Route path="documents" element={<DocumentsPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="preferences" element={<PreferencesPage />} />
+                  <Route path="documents" element={<DocumentsPage />} />
+                  <Route path="searches" element={<SearchesPage />} />
+                  <Route path="favorites" element={<FavoritesPage />} />
                 </Route>
 
 

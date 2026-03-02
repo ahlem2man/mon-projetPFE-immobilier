@@ -55,7 +55,26 @@ const tenantSchema = new mongoose.Schema({
   },
 
   // Pour l'indicateur de complétude (0 à 100)
-  completionPercentage: { type: Number, default: 0 }
+  completionPercentage: { type: Number, default: 0 },
+
+  // Tableau des recherches mémorisées (Étape 9)
+  savedSearches: [{
+    label: { type: String }, // Ex: "T3 à Lyon"
+    filters: {
+      location: String,
+      budgetMax: Number,
+      propertyType: String,
+      minRooms: Number,
+      isFurnished: Boolean
+    },
+    createdAt: { type: Date, default: Date.now }
+  }],
+
+  // Liste des IDs des propriétés "likées" (Étape 10)
+  favoriteProperties: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Property' 
+  }]
 
 }, { timestamps: true });
 

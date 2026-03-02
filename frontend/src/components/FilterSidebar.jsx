@@ -190,7 +190,7 @@ const FilterSidebar = ({ onApplyFilters, onClearFilters }) => {
                   size="small"
                 />
               }
-              label={<Typography variant="body2">📶 WiFi</Typography>}
+              label={<Typography variant="body2"> WiFi</Typography>}
             />
             <FormControlLabel
               control={
@@ -201,7 +201,7 @@ const FilterSidebar = ({ onApplyFilters, onClearFilters }) => {
                   size="small"
                 />
               }
-              label={<Typography variant="body2">❄️ Climatisation</Typography>}
+              label={<Typography variant="body2"> Climatisation</Typography>}
             />
             <FormControlLabel
               control={
@@ -212,7 +212,7 @@ const FilterSidebar = ({ onApplyFilters, onClearFilters }) => {
                   size="small"
                 />
               }
-              label={<Typography variant="body2">🛗 Ascenseur</Typography>}
+              label={<Typography variant="body2"> Ascenseur</Typography>}
             />
           </FormGroup>
         </Box>
@@ -236,7 +236,7 @@ const FilterSidebar = ({ onApplyFilters, onClearFilters }) => {
               boxShadow: 2
             }}
           >
-            🔍 Appliquer les filtres
+             Appliquer les filtres
           </Button>
           <Button
             fullWidth
