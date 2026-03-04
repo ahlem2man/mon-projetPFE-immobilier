@@ -1,5 +1,5 @@
 import { AppBar, Toolbar, Button, Stack, Box, Typography, Menu, MenuItem, Divider, useMediaQuery, useTheme } from '@mui/material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext'; 
 import FavoriteIcon from '@mui/icons-material/Favorite'; 
@@ -7,9 +7,12 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import logoHoma from '../assets/logo-homa.avif'; 
+import AssignmentIcon from '@mui/icons-material/Assignment';
+
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext); 
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
@@ -262,6 +265,21 @@ const Navbar = () => {
                   <DashboardIcon sx={{ fontSize: 18, mr: 1.5, color: '#00BCD4' }} />
                   Mon Espace Locataire
                 </MenuItem>
+
+                <MenuItem 
+  onClick={handleClose} 
+  component={Link} 
+  to="/dashboard/applications"
+  sx={{
+    py: 1.2,
+    '&:hover': {
+      backgroundColor: '#f5f5f5',
+    }
+  }}
+>
+  <AssignmentIcon sx={{ fontSize: 18, mr: 1.5, color: '#2fa9c4' }} />
+  Mes Candidatures
+</MenuItem>
 
                 <MenuItem 
                   onClick={handleClose} 

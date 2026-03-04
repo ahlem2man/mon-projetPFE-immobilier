@@ -12,6 +12,7 @@ const User = require('./models/User');
 const Property = require('./models/Property'); 
 const propertyRoutes = require('./routes/propertyRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
+const requestRoutes = require('./routes/requestRoutes'); 
 
 
 dotenv.config();
@@ -35,12 +36,7 @@ app.use(cors({
 app.use(express.json()); 
 
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100,
-  message: { message: "Trop de requêtes, réessayez plus tard." }
-});
-app.use(limiter);
+
 
 
 console.log("Chargement des routes d'authentification...");
@@ -48,6 +44,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/tenant', tenantRoutes);
 app.use('/uploads', express.static('uploads'));
+app.use('/api/requests', requestRoutes); // Branchement
+
 
 app.get('/api/auth/profile', authMiddleware, async (req, res) => {
   try {
@@ -59,42 +57,38 @@ app.get('/api/auth/profile', authMiddleware, async (req, res) => {
   }
 });
 
+console.log(`[DB] Tentative de connexion à : ${process.env.MONGO_URI}`);
 
+// Démarrer le serveur IMMÉDIATEMENT (sans attendre MongoDB)
+const PORT = process.env.PORT || 5000;
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(` Serveur démarré sur le port ${PORT}`);
+  });
+}
+
+// Connexion MongoDB en arrière-plan avec reconnexion
 mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 3000,
   socketTimeoutMS: 45000,
-  maxPoolSize: 10,
-  minPoolSize: 2,
+  maxPoolSize: 5,
+  minPoolSize: 1,
+  retryWrites: true,
 })
   .then(async () => {
-    console.log("Connecté à MongoDB avec succès"); 
+    console.log(" Connecté à MongoDB avec succès"); 
     
     try {
       const count = await Property.countDocuments();
-      console.log(`Vérification : ${count} propriété(s) trouvée(s) dans la base.`);
+      console.log(` Vérification : ${count} propriété(s) trouvée(s) dans la base.`);
     } catch (err) {
-      console.error("Erreur lors du test du modèle Property:", err);
-    }
-    
-    // DÉMARRER LE SERVEUR SEULEMENT APRÈS LA CONNEXION
-    const PORT = process.env.PORT || 5000;
-    if (!process.env.VERCEL) {
-      app.listen(PORT, () => {
-        console.log(`Serveur démarré sur le port ${PORT}`);
-      });
+      console.error(" Erreur lors du test du modèle Property:", err.message);
     }
   })
   .catch(err => {
-    console.error("Erreur de connexion MongoDB:", err);
-    process.exit(1);
+    console.warn("  Connexion MongoDB échouée (le serveur fonctionnera quand même):", err.message);
+    console.warn(" MongoDB sera reconnecté automatiquement...");
   });
-
-
-const PORT = process.env.PORT || 5000;
-
-if (process.env.VERCEL) {
-  module.exports = app;
-}
 
 
 
@@ -117,3 +111,8 @@ const seedTest = async () => {
     console.log("Aucun utilisateur trouvé pour créer une annonce.");
   }
 };
+
+// Export pour Vercel
+if (process.env.VERCEL) {
+  module.exports = app;
+}

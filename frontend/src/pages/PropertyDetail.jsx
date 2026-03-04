@@ -12,6 +12,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { AuthContext } from '../context/AuthContext';
 import PropertyMap from '../components/PropertyMap';
+import ApplyModal from '../components/ApplyModal'; // Assure-toi que le fichier ApplyModal existe
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -26,6 +27,9 @@ const PropertyDetail = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+  // --- NOUVEL ÉTAT POUR SPRINT 5 ---
+  const [openApplyModal, setOpenApplyModal] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -55,6 +59,24 @@ const PropertyDetail = () => {
       setIsFav(isAlreadyFav);
     }
   }, [property?.favorites, user?.id]);
+
+  // Exemple de fonction à ajouter dans ta page de détail du bien
+  const handleApply = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post('http://localhost:5000/api/requests', 
+        { 
+          propertyId: property._id, 
+          message: "Bonjour, mon dossier est complet et je suis très intéressé par votre bien." 
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      alert(response.data.message); // "Votre candidature a été transmise avec succès !"
+    } catch (error) {
+      alert(error.response?.data?.message || "Erreur lors de l'envoi");
+    }
+  };
 
   // Handler pour toggle favori
   const handleFavoriteToggle = async () => {
@@ -185,6 +207,23 @@ const PropertyDetail = () => {
                 {property.price.toLocaleString()} € <Typography component="span" variant="body1" color="text.secondary">/ mois</Typography>
               </Typography>
 
+              {/* BOUTON POSTULER (NOUVEAU - SPRINT 5) */}
+              <Button 
+                variant="contained" 
+                size="large" 
+                fullWidth
+                onClick={() => setOpenApplyModal(true)}
+                sx={{ 
+                  py: 1.5, 
+                  fontWeight: 'bold', 
+                  bgcolor: '#0a1930', 
+                  fontSize: '1.1rem',
+                  '&:hover': { bgcolor: '#1a2940' } 
+                }}
+              >
+                Postuler pour ce logement
+              </Button>
+
               <Divider />
 
               {/* Specs rapides */}
@@ -263,6 +302,15 @@ const PropertyDetail = () => {
           </Alert>
         )}
       </Box>
+
+      {/* MODAL DE CANDIDATURE (NOUVEAU - SPRINT 5) */}
+      <ApplyModal 
+        open={openApplyModal} 
+        handleClose={() => setOpenApplyModal(false)}
+        propertyId={property._id}
+        propertyTitle={property.title}
+        completionRate={100} // Tu peux lier cela dynamiquement plus tard
+      />
 
       {/* Snackbar pour les notifications */}
       <Snackbar

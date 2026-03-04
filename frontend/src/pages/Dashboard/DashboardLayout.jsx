@@ -3,6 +3,7 @@ import { Person, Settings, Description, Favorite, Search } from '@mui/icons-mate
 import { Link, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const drawerWidth = 260;
 
@@ -31,6 +32,7 @@ export default function DashboardLayout() {
     { text: 'Mes Documents', icon: <Description />, path: '/dashboard/documents' },
     { text: 'Recherches', icon: <Search />, path: '/dashboard/searches' },
     { text: 'Mes Favoris', icon: <Favorite />, path: '/dashboard/favorites' },
+    { text: 'Mes Candidatures', icon: <AssignmentIcon />, path: '/dashboard/applications' },
   ];
 
   return (

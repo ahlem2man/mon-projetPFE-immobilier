@@ -3,7 +3,8 @@ const Property = require('../models/Property');
 
 exports.getAllProperties = async (req, res) => {
   try {
-    let query = { status: 'disponible' };
+    // Commencer sans filtrer par status (pour déboguer)
+    let query = {};
 
     // 1. Recherche par ville
     if (req.query.location) {
