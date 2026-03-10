@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { 
   Container, Grid, Typography, Box, CircularProgress, Stack,
   Pagination, MenuItem, TextField, Drawer, IconButton, Button, Dialog,
@@ -13,6 +13,9 @@ import FilterSidebar from '../components/FilterSidebar';
 import API_BASE_URL from '../config/api';
 
 const Home = () => {
+  // --- RÉCUPÉRER LES QUERY PARAMS ---
+  const [searchParams] = useSearchParams();
+  
   // --- ÉTATS (STATES) ---
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +64,29 @@ const Home = () => {
   useEffect(() => {
     fetchProperties(currentFilters, page, sort);
   }, [page, sort]);
+
+  // ✨ NOUVEAU: Appliquer les filtres depuis query params au montage
+  useEffect(() => {
+    const filtersFromURL = {};
+    
+    if (searchParams.get('location')) filtersFromURL.location = searchParams.get('location');
+    if (searchParams.get('type')) filtersFromURL.type = searchParams.get('type');
+    if (searchParams.get('minPrice')) filtersFromURL.minPrice = searchParams.get('minPrice');
+    if (searchParams.get('maxPrice')) filtersFromURL.maxPrice = searchParams.get('maxPrice');
+    if (searchParams.get('minRooms')) filtersFromURL.minRooms = searchParams.get('minRooms');
+    
+    // S'il y a des filtres dans l'URL, les appliquer
+    if (Object.keys(filtersFromURL).length > 0) {
+      setCurrentFilters(filtersFromURL);
+      fetchProperties(filtersFromURL, 1, sort);
+      setPage(1);
+    } else {
+      // ✨ IMPORTANT: S'il n'y a pas de query params, réinitialiser les filtres
+      setCurrentFilters({});
+      fetchProperties({}, 1, sort);
+      setPage(1);
+    }
+  }, [searchParams]); // Re-run quand les query params changent
 
   // --- GESTIONNAIRES ---
   const handleApplyFilters = (filters) => {

@@ -34,14 +34,12 @@ const requestSchema = new mongoose.Schema({
   // Historique/Logs pour le suivi (Optionnel mais recommandé pour le Sprint 5)
   statusHistory: [
     {
-      status: String,
-      changedAt: { type: Date, default: Date.now },
-      comment: String
+      status: { type: String, required: true },
+      date: { type: Date, default: Date.now },
+      comment: { type: String }
     }
   ]
-}, { 
-  timestamps: true 
-});
+}, { timestamps: true });
 
 // Index pour accélérer la recherche des candidatures d'un locataire
 requestSchema.index({ tenantId: 1, propertyId: 1 });

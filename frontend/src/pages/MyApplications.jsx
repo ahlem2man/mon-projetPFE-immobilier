@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Container, Typography, Card, CardContent, Grid, 
-  Chip, Box, CircularProgress, Alert, Stack 
+  Chip, Box, CircularProgress, Alert, Stack, Button 
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
 
 const MyApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+ 
 
   useEffect(() => {
     const fetchMyApplications = async () => {
@@ -58,11 +60,20 @@ const MyApplications = () => {
           {applications.map((app) => {
             const statusStyle = getStatusStyle(app.status);
             return (
-              <Card key={app._id} variant="outlined" sx={{ borderRadius: 3, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+              <Card 
+  key={app._id} 
+  onClick={() => navigate(`/dashboard/applications/${app._id}`)}
+  sx={{ 
+    borderRadius: 3, 
+    cursor: 'pointer', 
+    transition: '0.3s',
+    '&:hover': { boxShadow: '0 4px 20px rgba(0,0,0,0.1)', transform: 'translateY(-2px)' }
+  }}
+>
                 <CardContent>
                   <Grid container alignItems="center" spacing={2}>
                     {/* Image miniature du bien */}
-                    <Grid item xs={12} sm={3}>
+                    <Grid size={{ xs: 12, sm: 3 }}>
                       <Box 
                         component="img"
                         src={app.propertyId?.images?.[0] || 'https://via.placeholder.com/150'}
@@ -71,26 +82,45 @@ const MyApplications = () => {
                     </Grid>
 
                     {/* Infos du bien */}
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {app.propertyId?.title || "Bien immobilier"}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {app.propertyId?.location} • {app.propertyId?.price} €/mois
-                      </Typography>
-                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                        Envoyée le : {new Date(app.createdAt).toLocaleDateString()}
-                      </Typography>
-                    </Grid>
-
+<Grid size={{ xs: 12, sm: 6 }}>
+  <Typography variant="h6" fontWeight="bold">
+    {app.propertyId?.title || "Bien immobilier"}
+  </Typography>
+  <Typography variant="body2" color="text.secondary">
+    {app.propertyId?.location} • {app.propertyId?.price} €/mois
+  </Typography>
+  
+  {/* CETTE PARTIE POUR L'HISTORIQUE */}
+  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1 }}>
+    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'medium' }}>
+      Postulé le : {new Date(app.createdAt).toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}
+    </Typography>
+  </Stack>
+</Grid>
                     {/* Statut */}
-                    <Grid item xs={12} sm={3} sx={{ textAlign: { sm: 'right', xs: 'left' } }}>
-                      <Chip 
-                        label={statusStyle.label} 
-                        color={statusStyle.color} 
-                        variant="filled" 
-                        sx={{ fontWeight: 'bold', minWidth: 100 }}
-                      />
+                    <Grid size={{ xs: 12, sm: 3 }} sx={{ textAlign: { sm: 'right', xs: 'left' } }}>
+                      <Stack spacing={1} alignItems={{ sm: 'flex-end', xs: 'flex-start' }}>
+                        <Chip 
+                          label={statusStyle.label} 
+                          color={statusStyle.color} 
+                          variant="filled" 
+                          sx={{ fontWeight: 'bold', minWidth: 100 }}
+                        />
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => navigate(`/dashboard/applications/${app._id}`)}
+                          sx={{ color: '#00BCD4', borderColor: '#00BCD4' }}
+                        >
+                          Voir détails
+                        </Button>
+                      </Stack>
                     </Grid>
                   </Grid>
                 </CardContent>

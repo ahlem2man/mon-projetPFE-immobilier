@@ -75,7 +75,7 @@ export default function ProfilePage() {
         </Typography>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Profession"
@@ -87,7 +87,7 @@ export default function ProfilePage() {
                 helperText={profile.profession ? '✓' : 'Requis pour la complétude'}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 select
@@ -101,7 +101,7 @@ export default function ProfilePage() {
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Revenus mensuels nets (€)"
@@ -114,7 +114,7 @@ export default function ProfilePage() {
                 helperText={profile.income > 0 ? '✓' : 'Important pour les propriétaires'}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Employeur / École"
@@ -125,7 +125,7 @@ export default function ProfilePage() {
                 variant="outlined"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Button 
                 type="submit" 
                 variant="contained" 

@@ -232,6 +232,37 @@ exports.getSearch = async (req, res) => {
   }
 };
 
+// ✨ Mettre à jour une recherche sauvegardée (édition)
+exports.updateSearch = async (req, res) => {
+  try {
+    const { searchId } = req.params;
+    const { label, filters } = req.body;
+
+    if (!label) {
+      return res.status(400).json({ message: "Le nom de la recherche est requis" });
+    }
+
+    const tenant = await Tenant.findOneAndUpdate(
+      { userId: req.user.id || req.user._id, 'savedSearches._id': searchId },
+      {
+        $set: {
+          'savedSearches.$.label': label,
+          'savedSearches.$.filters': filters
+        }
+      },
+      { new: true }
+    );
+
+    if (!tenant) {
+      return res.status(404).json({ message: "Recherche non trouvée" });
+    }
+
+    res.json({ message: "Recherche modifiée !", savedSearches: tenant.savedSearches });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ========== ROUTES FAVORIS (Étape 10) ==========
 
 // Récupérer la liste des IDs de propriétés favorites

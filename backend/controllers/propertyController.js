@@ -106,18 +106,33 @@ exports.getPropertyById = async (req, res) => {
 
 exports.toggleFavorite = async (req, res) => {
   try {
+    const Tenant = require('../models/Tenant');
+    
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ message: "Annonce non trouvée" });
 
-    
+    // Vérifier si déjà en favori
     const isFavorite = property.favorites.includes(req.user.id);
 
     if (isFavorite) {
-      
+      //  Retirer des favoris
       property.favorites = property.favorites.filter(id => id.toString() !== req.user.id);
-    } else {
       
+      //  AUSSI retirer du Tenant
+      await Tenant.findOneAndUpdate(
+        { userId: req.user.id },
+        { $pull: { favoriteProperties: req.params.id } }
+      );
+    } else {
+      //  Ajouter aux favoris
       property.favorites.push(req.user.id);
+      
+      //  AUSSI ajouter au Tenant
+      await Tenant.findOneAndUpdate(
+        { userId: req.user.id },
+        { $addToSet: { favoriteProperties: req.params.id } },
+        { upsert: true }
+      );
     }
 
     await property.save();

@@ -24,8 +24,9 @@ router.post('/upload-docs', protect, upload.fields([
 
 // ========== RECHERCHES SAUVEGARDÉES ==========
 router.post('/save-search', protect, tenantController.saveSearch);
-router.delete('/delete-search/:searchId', protect, tenantController.deleteSearch);
 router.get('/search/:searchId', protect, tenantController.getSearch);
+router.put('/update-search/:searchId', protect, tenantController.updateSearch);
+router.delete('/delete-search/:searchId', protect, tenantController.deleteSearch);
 
 // ========== FAVORIS ==========
 router.get('/favorites', protect, tenantController.getFavorites);

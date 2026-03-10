@@ -26,6 +26,7 @@ import DocumentsPage from './pages/Dashboard/DocumentsPage';
 import SearchesPage from './pages/Dashboard/SearchesPage';
 import FavoritesPage from './pages/Dashboard/FavoritesPage';
 import MyApplications from './pages/MyApplications';
+import DetailedApplication from './pages/DetailedApplication';
 
 
 
@@ -60,6 +61,7 @@ function App() {
                   <Route path="searches" element={<SearchesPage />} />
                   <Route path="favorites" element={<FavoritesPage />} />
                   <Route path="applications" element={<MyApplications />} />
+                  <Route path="applications/:requestId" element={<DetailedApplication />} />
                 </Route>
                 
 

@@ -8,6 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import logoHoma from '../assets/logo-homa.avif'; 
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import NotificationPanel from './NotificationPanel';
 
 
 const Navbar = () => {
@@ -203,6 +204,9 @@ const Navbar = () => {
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           {user ? (
             <>
+              {/* Notification Panel */}
+              <NotificationPanel />
+              
               <Button
                 onClick={handleClick}
                 endIcon={<KeyboardArrowDownIcon />}

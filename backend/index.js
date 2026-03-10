@@ -45,7 +45,7 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/tenant', tenantRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/requests', requestRoutes); // Branchement
-
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 app.get('/api/auth/profile', authMiddleware, async (req, res) => {
   try {

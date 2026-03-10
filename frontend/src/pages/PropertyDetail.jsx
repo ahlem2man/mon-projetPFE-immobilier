@@ -36,13 +36,6 @@ const PropertyDetail = () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
         setProperty(res.data.data);
-        
-        // Vérifier si l'utilisateur a mis en favori
-        if (user?.id && res.data.data.favorites) {
-          const isAlreadyFav = res.data.data.favorites.some(favId => String(favId) === String(user.id));
-          setIsFav(isAlreadyFav);
-        }
-        
         setLoading(false);
       } catch (err) {
         console.error("Erreur", err);
@@ -50,15 +43,36 @@ const PropertyDetail = () => {
       }
     };
     fetchProperty();
-  }, [id, user?.id]);
+  }, [id]);
 
-  // Synchroniser isFav si property.favorites change
   useEffect(() => {
-    if (user?.id && property?.favorites) {
-      const isAlreadyFav = property.favorites.some(favId => String(favId) === String(user.id));
-      setIsFav(isAlreadyFav);
+    const checkIfFavorite = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!user?.id || !token) {
+          setIsFav(false);
+          return;
+        }
+
+        // ✨ Vérifier directement depuis Tenant pour être sûr
+        const tenantRes = await axios.get('http://localhost:5000/api/tenant/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const favIds = tenantRes.data.favoriteProperties || [];
+        const isAlreadyFav = favIds.includes(id);
+        setIsFav(isAlreadyFav);
+      } catch (err) {
+        console.error("Erreur lors de la vérification des favoris", err);
+        setIsFav(false);
+      }
+    };
+
+    // Appeler après que user soit chargé
+    if (user?.id) {
+      checkIfFavorite();
     }
-  }, [property?.favorites, user?.id]);
+  }, [id, user?.id]);
 
   // Exemple de fonction à ajouter dans ta page de détail du bien
   const handleApply = async () => {
@@ -94,7 +108,7 @@ const PropertyDetail = () => {
       const res = await axios.post(
         `http://localhost:5000/api/properties/${id}/favorite`,
         {},
-        { headers: { 'x-auth-token': token } }
+        { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
       if (res.data.success) {
@@ -129,7 +143,7 @@ const PropertyDetail = () => {
       <Grid container spacing={4}>
         
         {/* --- SECTION GAUCHE : GALERIE --- */}
-        <Grid item xs={12} md={7}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={2}>
             {/* Image Principale */}
             <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden', height: '450px' }}>
@@ -165,7 +179,7 @@ const PropertyDetail = () => {
         </Grid>
 
         {/* --- SECTION DROITE : INFOS --- */}
-        <Grid item xs={12} md={5}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
             <Stack spacing={3}>
               {/* TITRE + BOUTON FAVORIS */}
@@ -267,13 +281,13 @@ const PropertyDetail = () => {
                   border: `1px solid ${isFav ? '#ffcdd2' : '#e0e0e0'}`
                 }}>
                   <Typography variant="body2" sx={{ color: isFav ? '#c62828' : '#666' }}>
-                    {isFav ? '❤️ Cette propriété est dans vos favoris' : '💚 Ajoutez cette propriété à vos favoris'}
+                    {isFav ? ' Cette propriété est dans vos favoris' : ' Ajoutez cette propriété à vos favoris'}
                   </Typography>
                 </Box>
               ) : (
                 <Box sx={{ p: 2, bgcolor: '#e3f2fd', borderRadius: 1, border: '1px solid #bbdefb' }}>
                   <Typography variant="body2" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
-                    📌 Connectez-vous pour ajouter aux favoris
+                     Connectez-vous pour ajouter aux favoris
                   </Typography>
                 </Box>
               )}
