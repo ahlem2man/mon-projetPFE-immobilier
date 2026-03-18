@@ -20,7 +20,7 @@ import StarIcon from '@mui/icons-material/Star';
 const FilterSidebar = ({ onApplyFilters, onClearFilters }) => {
   // États des filtres
   const [location, setLocation] = useState('');
-  const [type, setType] = useState('Tous');
+  const [type, setType] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [amenities, setAmenities] = useState({
@@ -117,7 +117,7 @@ const FilterSidebar = ({ onApplyFilters, onClearFilters }) => {
               },
             }}
           >
-            <MenuItem value="Tous">Tous les types</MenuItem>
+            <MenuItem value="">Tous les types</MenuItem>
             <MenuItem value="Appartement">Appartement</MenuItem>
             <MenuItem value="Villa">Villa</MenuItem>
             <MenuItem value="Maison">Maison</MenuItem>

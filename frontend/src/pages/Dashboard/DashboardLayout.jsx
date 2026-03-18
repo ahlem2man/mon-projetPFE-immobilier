@@ -33,6 +33,7 @@ export default function DashboardLayout() {
     { text: 'Recherches', icon: <Search />, path: '/dashboard/searches' },
     { text: 'Mes Favoris', icon: <Favorite />, path: '/dashboard/favorites' },
     { text: 'Mes Candidatures', icon: <AssignmentIcon />, path: '/dashboard/applications' },
+    { text: 'Recommandations', icon: <AssignmentIcon />, path: '/dashboard/recommendations' },
   ];
 
   return (

@@ -17,7 +17,7 @@ export default function SearchesPage() {
   const [editLabel, setEditLabel] = useState('');
   const [editFilters, setEditFilters] = useState({
     location: '',
-    propertyType: 'Tous',
+    propertyType: '',
     minPrice: '',
     budgetMax: '',
     minRooms: ''
@@ -41,7 +41,7 @@ export default function SearchesPage() {
     setEditLabel(search.label);
     setEditFilters({
       location: search.filters.location || '',
-      propertyType: search.filters.propertyType || 'Tous',
+      propertyType: search.filters.propertyType || '',
       minPrice: search.filters.minPrice || '',
       budgetMax: search.filters.budgetMax || '',
       minRooms: search.filters.minRooms || ''
@@ -52,7 +52,7 @@ export default function SearchesPage() {
   const handleEditClose = () => {
     setEditingSearchId(null);
     setEditLabel('');
-    setEditFilters({ location: '', propertyType: 'Tous', minPrice: '', budgetMax: '', minRooms: '' });
+    setEditFilters({ location: '', propertyType: '', minPrice: '', budgetMax: '', minRooms: '' });
   };
 
   //  SAUVEGARDER LES MODIFICATIONS
@@ -105,7 +105,7 @@ export default function SearchesPage() {
       
       const queryParams = new URLSearchParams();
       if (filters.location) queryParams.append('location', filters.location);
-      if (filters.propertyType && filters.propertyType !== 'Tous') queryParams.append('type', filters.propertyType);
+      if (filters.propertyType) queryParams.append('type', filters.propertyType);
       if (filters.minPrice) queryParams.append('minPrice', filters.minPrice);
       if (filters.budgetMax) queryParams.append('maxPrice', filters.budgetMax);
       if (filters.minRooms) queryParams.append('minRooms', filters.minRooms);
@@ -209,12 +209,12 @@ export default function SearchesPage() {
               onChange={(e) => setEditFilters({ ...editFilters, propertyType: e.target.value })}
               label="Type de propriété"
             >
-              <MenuItem value="Tous">Tous</MenuItem>
+              <MenuItem value="">Tous</MenuItem>
               <MenuItem value="Appartement">Appartement</MenuItem>
+              <MenuItem value="Villa">Villa</MenuItem>
               <MenuItem value="Maison">Maison</MenuItem>
               <MenuItem value="Studio">Studio</MenuItem>
-              <MenuItem value="Penthouse">Penthouse</MenuItem>
-              <MenuItem value="Villa">Villa</MenuItem>
+              <MenuItem value="Bureau">Bureau</MenuItem>
             </Select>
           </FormControl>
 

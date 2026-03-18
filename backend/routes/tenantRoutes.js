@@ -22,6 +22,12 @@ router.post('/upload-docs', protect, upload.fields([
   { name: 'utilityBill', maxCount: 1 }
 ]), tenantController.uploadDocuments);
 
+// 🆕 Upload d'un seul document
+router.post('/upload-doc/:docType', protect, upload.single('file'), tenantController.uploadSingleDocument);
+
+// 🆕 Supprimer un document
+router.delete('/delete-doc/:docType', protect, tenantController.deleteDocument);
+
 // ========== RECHERCHES SAUVEGARDÉES ==========
 router.post('/save-search', protect, tenantController.saveSearch);
 router.get('/search/:searchId', protect, tenantController.getSearch);

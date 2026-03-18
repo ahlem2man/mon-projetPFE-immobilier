@@ -13,6 +13,8 @@ const Property = require('./models/Property');
 const propertyRoutes = require('./routes/propertyRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const requestRoutes = require('./routes/requestRoutes'); 
+const matchingRoutes = require('./routes/matchingRoutes');
+const initCronJobs = require('./utils/cronJobs');
 
 
 dotenv.config();
@@ -46,6 +48,8 @@ app.use('/api/tenant', tenantRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/requests', requestRoutes); // Branchement
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/matchings', matchingRoutes);
+initCronJobs(); // Lancement des tâches planifiées
 
 app.get('/api/auth/profile', authMiddleware, async (req, res) => {
   try {

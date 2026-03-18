@@ -1,9 +1,10 @@
 /**
  * Calcule le pourcentage de complétude du profil locataire
  * @param {Object} tenant - Objet tenant de la BDD
+ * @param {Object} userPreferences - Préférences du User (optionnel)
  * @returns {Number} Pourcentage de 0 à 100
  */
-function calculateCompletion(tenant) {
+function calculateCompletion(tenant, userPreferences = null) {
   if (!tenant) return 0;
 
   // Déterminer tous les champs "obligatoires" pour un profil complet
@@ -17,11 +18,11 @@ function calculateCompletion(tenant) {
     'income': tenant.income && tenant.income > 0 ? 1 : 0,
     'employer': tenant.employer ? 1 : 0,
 
-    // Préférences (Étape 3)
-    'preferences.location': tenant.preferences?.location ? 1 : 0,
-    'preferences.budgetMax': tenant.preferences?.budgetMax && tenant.preferences.budgetMax > 0 ? 1 : 0,
-    'preferences.propertyType': tenant.preferences?.propertyType && tenant.preferences.propertyType !== 'Tous' ? 1 : 0,
-    'preferences.moveInDate': tenant.preferences?.moveInDate ? 1 : 0,
+    // Préférences (Étape 3) - utilisé du User si disponible
+    'preferences.location': (userPreferences?.city || tenant.preferences?.location) ? 1 : 0,
+    'preferences.budgetMax': (userPreferences?.maxPrice && userPreferences.maxPrice > 0 || tenant.preferences?.budgetMax && tenant.preferences.budgetMax > 0) ? 1 : 0,
+    'preferences.propertyType': (userPreferences?.propertyType && userPreferences.propertyType !== '' || tenant.preferences?.propertyType && tenant.preferences.propertyType !== 'Tous') ? 1 : 0,
+    'preferences.moveInDate': (userPreferences?.moveInDate || tenant.preferences?.moveInDate) ? 1 : 0,
 
     // Situation professionnelle (Étape 4)
     'professionalStatus.status': tenant.professionalStatus?.status ? 1 : 0,

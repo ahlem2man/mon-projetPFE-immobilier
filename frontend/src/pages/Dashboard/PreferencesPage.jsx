@@ -10,7 +10,7 @@ const PreferencesPage = () => {
   const [prefs, setPrefs] = useState({
     location: '',
     budgetMax: '',
-    propertyType: 'Tous',
+    propertyType: '',
     minRooms: 1,
     moveInDate: ''
   });
@@ -27,8 +27,18 @@ const PreferencesPage = () => {
         });
         if (res.data) {
           setCompletion(res.data.completionPercentage || 0);
+          
+          // Mapper les préférences du backend vers l'UI
           if (res.data.preferences) {
-            setPrefs(prev => ({ ...prev, ...res.data.preferences }));
+            const prefs = res.data.preferences;
+            setPrefs(prev => ({
+              ...prev,
+              location: prefs.city || '',
+              budgetMax: prefs.maxPrice ? String(prefs.maxPrice) : '',
+              propertyType: prefs.propertyType || '',
+              minRooms: prefs.minRooms || 1,
+              moveInDate: prefs.moveInDate ? (typeof prefs.moveInDate === 'string' ? prefs.moveInDate.split('T')[0] : prefs.moveInDate) : ''
+            }));
           }
         }
         setLoading(false);
@@ -44,15 +54,34 @@ const PreferencesPage = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await axios.put('http://localhost:5000/api/tenant/profile', { preferences: prefs }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setCompletion(res.data.completionPercentage || 0);
-      setMessage({ type: 'success', text: `Préférences enregistrées ! Complétude: ${res.data.completionPercentage}%` });
-      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+      // Mapper les champs UI vers le modèle Backend
+      const preferencesData = {
+        city: prefs.location,
+        maxPrice: parseInt(prefs.budgetMax) || 0,
+        propertyType: prefs.propertyType,
+        minSurface: 0,
+        minRooms: parseInt(prefs.minRooms) || 1,
+        moveInDate: prefs.moveInDate ? new Date(prefs.moveInDate) : null,
+        wantedAmenities: []
+      };
+
+      console.log('📤 Envoi des préférences:', preferencesData);
+
+      // Utiliser le nouvel endpoint dédié au matching
+      const res = await axios.post('http://localhost:5000/api/matchings/save-preferences', 
+        { preferences: preferencesData }, 
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+
+      console.log('✅ Réponse:', res.data);
+
+      setMessage({ type: 'success', text: `✅ Préférences sauvegardées ! Allez en Recommandations et cliquez Générer.` });
+      setTimeout(() => setMessage({ type: '', text: '' }), 5000);
     } catch (err) {
       console.error('Error:', err);
-      setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde.' });
+      setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde: ' + err.response?.data?.message || err.message });
     } finally {
       setSubmitting(false);
     }
@@ -115,8 +144,8 @@ const PreferencesPage = () => {
               value={prefs.propertyType}
               onChange={(e) => setPrefs({...prefs, propertyType: e.target.value})}
             >
-              {['Tous', 'Appartement', 'Maison', 'Studio', 'Colocation'].map(opt => (
-                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+              {['', 'Appartement', 'Villa', 'Maison', 'Studio', 'Bureau'].map(opt => (
+                <MenuItem key={opt || 'all'} value={opt}>{opt || 'Tous'}</MenuItem>
               ))}
             </TextField>
           </Box>

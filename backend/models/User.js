@@ -9,8 +9,21 @@ const userSchema = new mongoose.Schema({
     enum: ['tenant', 'agency', 'admin', 'superadmin'], 
     default: 'tenant' 
   },
+  
+  // --- AJOUT POUR LE MATCHING ---
+  preferences: {
+    city: { type: String, default: "" },
+    maxPrice: { type: Number, default: 0 },
+    propertyType: { type: String, enum: ['Appartement', 'Villa', 'Maison', 'Studio', 'Bureau', ''], default: '' },
+    minSurface: { type: Number, default: 0 },
+    minRooms: { type: Number, default: 1 },
+    moveInDate: { type: Date, default: null },
+    wantedAmenities: [String] // Exemple: ['Parking', 'Wifi', 'Ascenseur']
+  },
+  // ------------------------------
+
   isVerified: { type: Boolean, default: false }, 
-  verificationToken: String, // Jeton pour l'email de confirmation
+  verificationToken: String,
   resetPasswordToken: String,
   resetPasswordExpires: Date
 }, { timestamps: true });

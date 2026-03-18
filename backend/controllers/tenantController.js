@@ -5,9 +5,63 @@ const calculateCompletion = require('../utils/calculateCompletion');
 exports.getTenantProfile = async (req, res) => {
   try {
     console.log('[GET /me] userId:', req.user.id);
-    const tenant = await Tenant.findOne({ userId: req.user.id });
+    const User = require('../models/User');
+    
+    let tenant = await Tenant.findOne({ userId: req.user.id });
+    const user = await User.findById(req.user.id).select('preferences');
+    
     console.log('[GET /me] Tenant trouvé:', tenant);
-    res.json(tenant);
+    console.log('[GET /me] User preferences:', user?.preferences);
+    
+    // NETTOYAGE: Si le Tenant a un champ preferences legacy, le supprimer
+    if (tenant && tenant.preferences) {
+      console.log('[GET /me] ⚠️  Tenant a un champ preferences legacy - NETTOYAGE...');
+      tenant = await Tenant.findOneAndUpdate(
+        { userId: req.user.id },
+        { $unset: { preferences: 1 } },
+        { new: true }
+      );
+      console.log('[GET /me] ✅ Champ preferences legacy supprimé du Tenant');
+    }
+    
+    // Construire le response SANS le champ preferences du Tenant
+    // Cela garantit qu'on retourne SEULEMENT les données User.preferences
+    const response = {
+      _id: tenant?._id,
+      userId: tenant?.userId,
+      profession: tenant?.profession,
+      employmentType: tenant?.employmentType,
+      income: tenant?.income,
+      employer: tenant?.employer,
+      professionalStatus: tenant?.professionalStatus || {},
+      documents: tenant?.documents || {},
+      completionPercentage: tenant?.completionPercentage || 0,
+      savedSearches: tenant?.savedSearches || [],
+      favoriteProperties: tenant?.favoriteProperties || [],
+      createdAt: tenant?.createdAt,
+      updatedAt: tenant?.updatedAt,
+      __v: tenant?.__v
+    };
+    
+    // TOUJOURS ajouter les préférences du User model (pas du Tenant!)
+    if (user?.preferences) {
+      response.preferences = user.preferences;
+      console.log('[GET /me] ✅ Retourne les préférences du User model');
+    } else {
+      // Si pas de préférences User, retourner un objet vide
+      response.preferences = {
+        city: '',
+        maxPrice: 0,
+        propertyType: '',
+        minSurface: 0,
+        minRooms: 1,
+        moveInDate: null,
+        wantedAmenities: []
+      };
+      console.log('[GET /me] ⚠️  Pas de préférences User - retourne objet vide');
+    }
+    
+    res.json(response);
   } catch (error) {
     console.error('[GET /me] Erreur:', error);
     res.status(500).json({ message: "Erreur serveur" });
@@ -23,7 +77,6 @@ exports.updateProfile = async (req, res) => {
     const { 
       profession, 
       income, 
-      preferences, 
       employmentType, 
       employer, 
       professionalStatus, 
@@ -37,7 +90,6 @@ exports.updateProfile = async (req, res) => {
     
     if (profession) updateData.profession = profession;
     if (income) updateData.income = income;
-    if (preferences) updateData.preferences = preferences;
     if (employmentType) updateData.employmentType = employmentType;
     if (employer) updateData.employer = employer;
     
@@ -50,16 +102,36 @@ exports.updateProfile = async (req, res) => {
 
     console.log('[PUT /profile] updateData:', updateData);
 
+    // 🆕 Assurer que le Tenant existe avec tous les champs
+    let tenant = await Tenant.findOne({ userId: req.user.id });
+    if (!tenant) {
+      // Créer un nouveau Tenant avec tous les champs initialisés
+      tenant = new Tenant({
+        userId: req.user.id,
+        documents: {},
+        professionalStatus: {},
+        ...updateData
+      });
+      await tenant.save();
+    } else {
+      // Mettre à jour le Tenant existant
+      tenant = await Tenant.findOneAndUpdate(
+        { userId: req.user.id },
+        { $set: updateData },
+        { new: true }
+      );
+    }
+    
+    // Récupérer les préférences du User pour calculer la complétude
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id).select('preferences');
+    const completion = calculateCompletion(tenant, user?.preferences);
+    
     const updatedTenant = await Tenant.findOneAndUpdate(
       { userId: req.user.id },
-      { $set: updateData },
-      { new: true, upsert: true }
+      { $set: { completionPercentage: completion } },
+      { new: true }
     );
-    
-    // Calculer et mettre à jour la complétude (Étape 8)
-    const completion = calculateCompletion(updatedTenant);
-    updatedTenant.completionPercentage = completion;
-    await updatedTenant.save();
     
     console.log('[PUT /profile] Tenant après update:', updatedTenant);
     res.json(updatedTenant);
@@ -75,7 +147,6 @@ exports.updateProfileFallback = async (req, res) => {
     const { 
       profession, 
       income, 
-      preferences, 
       employmentType, 
       employer, 
       professionalStatus, 
@@ -89,17 +160,34 @@ exports.updateProfileFallback = async (req, res) => {
     
     if (profession) updateData.profession = profession;
     if (income) updateData.income = income;
-    if (preferences) updateData.preferences = preferences;
     if (employmentType) updateData.employmentType = employmentType;
     if (employer) updateData.employer = employer;
     
     // Récupérer le tenant pour calculer la complétude (Étape 8)
-    let tenant = await Tenant.findOneAndUpdate(
-      { userId: req.user.id },
-      { $set: updateData },
-      { new: true, upsert: true }
-    );
-    const completion = calculateCompletion(tenant);
+    // Assurer que le Tenant existe avec tous les champs initialisés
+    let tenant = await Tenant.findOne({ userId: req.user.id });
+    if (!tenant) {
+      // Créer un nouveau Tenant avec tous les champs initialisés
+      tenant = new Tenant({
+        userId: req.user.id,
+        documents: {},
+        professionalStatus: {},
+        ...updateData
+      });
+      await tenant.save();
+    } else {
+      // Mettre à jour le Tenant existant
+      tenant = await Tenant.findOneAndUpdate(
+        { userId: req.user.id },
+        { $set: updateData },
+        { new: true }
+      );
+    }
+    
+    // Récupérer les préférences du User pour calculer la complétude
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id).select('preferences');
+    const completion = calculateCompletion(tenant, user?.preferences);
     const updatedTenant = await Tenant.findOneAndUpdate(
       { userId: req.user.id },
       { $set: { completionPercentage: completion } },
@@ -144,21 +232,37 @@ exports.uploadDocuments = async (req, res) => {
 
     console.log('[POST /upload-docs] updateData:', updateData);
 
-    // Mise à jour du locataire (avec upsert pour créer s'il n'existe pas)
-    let tenant = await Tenant.findOneAndUpdate(
-      { userId: req.user.id },
-      { $set: updateData },
-      { new: true, upsert: true }
-    );
-
-    console.log('[POST /upload-docs] Tenant après update:', tenant);
+    // Vérifier si le Tenant existe
+    let tenant = await Tenant.findOne({ userId: req.user.id });
+    
+    if (!tenant) {
+      // Créer un nouveau Tenant avec tous les champs initialisés
+      tenant = new Tenant({
+        userId: req.user.id,
+        documents: {},
+        professionalStatus: {},
+        ...updateData
+      });
+      await tenant.save();
+      console.log('[POST /upload-docs] Nouveau Tenant créé:', tenant);
+    } else {
+      // Mettre à jour le Tenant existant
+      tenant = await Tenant.findOneAndUpdate(
+        { userId: req.user.id },
+        { $set: updateData },
+        { new: true }
+      );
+      console.log('[POST /upload-docs] Tenant mis à jour:', tenant);
+    }
 
     if (!tenant) {
       return res.status(500).json({ message: "Erreur lors de la création/mise à jour du profil" });
     }
 
     // Recalculer la complétude après upload de documents (Étape 8)
-    const completion = calculateCompletion(tenant);
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id).select('preferences');
+    const completion = calculateCompletion(tenant, user?.preferences);
     tenant = await Tenant.findOneAndUpdate(
       { userId: req.user.id },
       { $set: { completionPercentage: completion } },
@@ -176,6 +280,140 @@ exports.uploadDocuments = async (req, res) => {
   }
 };
 
+// 🆕 3b. Upload d'un seul document (permet updates individuels sans écraser les autres)
+exports.uploadSingleDocument = async (req, res) => {
+  try {
+    const { docType } = req.params;
+    const userId = req.user.id;
+
+    console.log(`[POST /upload-doc/${docType}] userId:`, userId);
+    console.log(`[POST /upload-doc/${docType}] file:`, req.file?.filename);
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Aucun fichier uploadé" });
+    }
+
+    // Valider que docType est valide
+    const validDocTypes = [
+      'identityCard', 'taxNotice', 'lastThreePayslips', 'employmentContract',
+      'employerAttestation', 'rentalReceipts', 'propertyTax', 
+      'accommodationAttestation', 'utilityBill'
+    ];
+
+    if (!validDocTypes.includes(docType)) {
+      return res.status(400).json({ message: "Type de document invalide" });
+    }
+
+    // Mettre à jour UNIQUEMENT ce document
+    const updateData = {
+      [`documents.${docType}`]: req.file.path
+    };
+
+    console.log(`[POST /upload-doc/${docType}] updateData:`, updateData);
+
+    // Vérifier si le Tenant existe
+    let tenant = await Tenant.findOne({ userId });
+    
+    if (!tenant) {
+      // Créer un nouveau Tenant avec tous les champs initialisés
+      tenant = new Tenant({
+        userId,
+        documents: {
+          [docType]: req.file.path
+        },
+        professionalStatus: {}
+      });
+      await tenant.save();
+      console.log(`[POST /upload-doc/${docType}] Nouveau Tenant créé:`, tenant?.documents);
+    } else {
+      // Mettre à jour le Tenant existant
+      tenant = await Tenant.findOneAndUpdate(
+        { userId },
+        { $set: updateData },
+        { new: true }
+      );
+      console.log(`[POST /upload-doc/${docType}] Tenant mis à jour:`, tenant?.documents);
+    }
+
+    if (!tenant) {
+      return res.status(500).json({ message: "Erreur lors de la mise à jour" });
+    }
+
+    // Recalculer la complétude avec les préférences du User
+    const User = require('../models/User');
+    const user = await User.findById(userId).select('preferences');
+    const completion = calculateCompletion(tenant, user?.preferences);
+    const updatedTenant = await Tenant.findOneAndUpdate(
+      { userId },
+      { $set: { completionPercentage: completion } },
+      { new: true }
+    );
+
+    res.json({
+      message: `Document ${docType} uploadé avec succès`,
+      document: { [docType]: updatedTenant.documents[docType] },
+      completionPercentage: updatedTenant.completionPercentage
+    });
+
+  } catch (error) {
+    console.error(`[POST /upload-doc/:docType] Erreur:`, error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 🆕 3c. Supprimer un document
+exports.deleteDocument = async (req, res) => {
+  try {
+    const { docType } = req.params;
+    const userId = req.user.id;
+
+    console.log(`[DELETE /delete-doc/${docType}] userId:`, userId);
+
+    // Valider que docType est valide
+    const validDocTypes = [
+      'identityCard', 'taxNotice', 'lastThreePayslips', 'employmentContract',
+      'employerAttestation', 'rentalReceipts', 'propertyTax', 
+      'accommodationAttestation', 'utilityBill'
+    ];
+
+    if (!validDocTypes.includes(docType)) {
+      return res.status(400).json({ message: "Type de document invalide" });
+    }
+
+    // Supprimer le document (mettre à null)
+    const tenant = await Tenant.findOneAndUpdate(
+      { userId },
+      { $unset: { [`documents.${docType}`]: "" } },
+      { new: true }
+    );
+
+    console.log(`[DELETE /delete-doc/${docType}] Document supprimé`);
+
+    if (!tenant) {
+      return res.status(500).json({ message: "Erreur lors de la suppression" });
+    }
+
+    // Recalculer la complétude avec les préférences du User
+    const User = require('../models/User');
+    const user = await User.findById(userId).select('preferences');
+    const completion = calculateCompletion(tenant, user?.preferences);
+    const updatedTenant = await Tenant.findOneAndUpdate(
+      { userId },
+      { $set: { completionPercentage: completion } },
+      { new: true }
+    );
+
+    res.json({
+      message: `Document ${docType} supprimé avec succès`,
+      completionPercentage: updatedTenant.completionPercentage
+    });
+
+  } catch (error) {
+    console.error(`[DELETE /delete-doc/:docType] Erreur:`, error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
 // ========== RECHERCHES SAUVEGARDÉES (Étape 9) ==========
 
 // Sauvegarder une nouvelle recherche
@@ -183,11 +421,26 @@ exports.saveSearch = async (req, res) => {
   try {
     const { label, filters } = req.body;
     
-    const tenant = await Tenant.findOneAndUpdate(
-      { userId: req.user.id || req.user._id },
-      { $push: { savedSearches: { label, filters } } },
-      { new: true, upsert: true }
-    );
+    // Vérifier si le Tenant existe
+    let tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
+    
+    if (!tenant) {
+      // Créer un nouveau Tenant avec tous les champs initialisés
+      tenant = new Tenant({
+        userId: req.user.id || req.user._id,
+        documents: {},
+        professionalStatus: {},
+        savedSearches: [{ label, filters }]
+      });
+      await tenant.save();
+    } else {
+      // Mettre à jour le Tenant existant
+      tenant = await Tenant.findOneAndUpdate(
+        { userId: req.user.id || req.user._id },
+        { $push: { savedSearches: { label, filters } } },
+        { new: true }
+      );
+    }
 
     res.json({ message: "Recherche sauvegardée !", savedSearches: tenant.savedSearches });
   } catch (error) {
@@ -200,10 +453,18 @@ exports.deleteSearch = async (req, res) => {
   try {
     const { searchId } = req.params;
 
-    const tenant = await Tenant.findOneAndUpdate(
+    // Vérifier si le Tenant existe
+    let tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
+    
+    if (!tenant) {
+      // Si le Tenant n'existe pas, il n'y a rien à supprimer
+      return res.status(404).json({ message: "Tenant not found" });
+    }
+
+    tenant = await Tenant.findOneAndUpdate(
       { userId: req.user.id || req.user._id },
       { $pull: { savedSearches: { _id: searchId } } },
-      { new: true, upsert: true }
+      { new: true }
     );
 
     res.json({ message: "Recherche supprimée !", savedSearches: tenant.savedSearches });
@@ -280,11 +541,26 @@ exports.addFavorite = async (req, res) => {
   try {
     const { propertyId } = req.params;
 
-    const tenant = await Tenant.findOneAndUpdate(
-      { userId: req.user.id || req.user._id },
-      { $addToSet: { favoriteProperties: propertyId } }, // $addToSet évite les doublons
-      { new: true, upsert: true }
-    );
+    // Vérifier si le Tenant existe
+    let tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
+    
+    if (!tenant) {
+      // Créer un nouveau Tenant avec tous les champs initialisés
+      tenant = new Tenant({
+        userId: req.user.id || req.user._id,
+        documents: {},
+        professionalStatus: {},
+        favoriteProperties: [propertyId]
+      });
+      await tenant.save();
+    } else {
+      // Mettre à jour le Tenant existant
+      tenant = await Tenant.findOneAndUpdate(
+        { userId: req.user.id || req.user._id },
+        { $addToSet: { favoriteProperties: propertyId } },
+        { new: true }
+      );
+    }
 
     res.json({ message: "Propriété ajoutée aux favoris !", favorites: tenant.favoriteProperties });
   } catch (error) {
@@ -297,10 +573,18 @@ exports.removeFavorite = async (req, res) => {
   try {
     const { propertyId } = req.params;
 
-    const tenant = await Tenant.findOneAndUpdate(
+    // Vérifier si le Tenant existe
+    let tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
+    
+    if (!tenant) {
+      // Si le Tenant n'existe pas, il n'y a rien à supprimer
+      return res.status(404).json({ message: "Tenant not found" });
+    }
+
+    tenant = await Tenant.findOneAndUpdate(
       { userId: req.user.id || req.user._id },
       { $pull: { favoriteProperties: propertyId } },
-      { new: true, upsert: true }
+      { new: true }
     );
 
     res.json({ message: "Propriété supprimée des favoris !", favorites: tenant.favoriteProperties });

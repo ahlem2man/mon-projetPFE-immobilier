@@ -13,20 +13,6 @@ const tenantSchema = new mongoose.Schema({
   income: { type: Number },
   employer: { type: String }, // Nom de l'entreprise
 
-  // Préférences complètes
-  preferences: {
-    location: String,
-    budgetMax: Number,
-    propertyType: { 
-      type: String, 
-      enum: ['Appartement', 'Maison', 'Studio', 'Colocation', 'Tous'],
-      default: 'Tous'
-    },
-    minRooms: { type: Number, default: 1 },
-    moveInDate: { type: Date }, // Ajouté pour le Sprint 4
-    isFurnished: { type: Boolean, default: false } // Meublé ou non
-  },
-
   // Situation professionnelle et garant
   professionalStatus: {
     status: { type: String, enum: ['Étudiant(e)', 'Salarié(e)', 'Indépendant(e)', 'Demandeur d\'emploi', 'Autre'] },
@@ -76,6 +62,6 @@ const tenantSchema = new mongoose.Schema({
     ref: 'Property' 
   }]
 
-}, { timestamps: true });
+}, { timestamps: true, strict: true });
 
 module.exports = mongoose.model('Tenant', tenantSchema);

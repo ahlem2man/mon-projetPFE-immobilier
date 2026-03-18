@@ -128,11 +128,25 @@ exports.toggleFavorite = async (req, res) => {
       property.favorites.push(req.user.id);
       
       //  AUSSI ajouter au Tenant
-      await Tenant.findOneAndUpdate(
-        { userId: req.user.id },
-        { $addToSet: { favoriteProperties: req.params.id } },
-        { upsert: true }
-      );
+      let tenant = await Tenant.findOne({ userId: req.user.id });
+      
+      if (!tenant) {
+        // Créer un nouveau Tenant avec tous les champs initialisés
+        tenant = new Tenant({
+          userId: req.user.id,
+          documents: {},
+          professionalStatus: {},
+          favoriteProperties: [req.params.id]
+        });
+        await tenant.save();
+      } else {
+        // Mettre à jour le Tenant existant
+        await Tenant.findOneAndUpdate(
+          { userId: req.user.id },
+          { $addToSet: { favoriteProperties: req.params.id } },
+          { new: true }
+        );
+      }
     }
 
     await property.save();

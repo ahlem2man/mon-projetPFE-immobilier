@@ -122,7 +122,7 @@ const Home = () => {
       const filters = {
         location: currentFilters.location || '',
         budgetMax: currentFilters.maxPrice || 0,
-        propertyType: currentFilters.type || 'Tous',
+        propertyType: currentFilters.type || '',
         minRooms: currentFilters.minRooms || 0
       };
 

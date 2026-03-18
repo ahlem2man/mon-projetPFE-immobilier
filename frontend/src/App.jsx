@@ -27,6 +27,7 @@ import SearchesPage from './pages/Dashboard/SearchesPage';
 import FavoritesPage from './pages/Dashboard/FavoritesPage';
 import MyApplications from './pages/MyApplications';
 import DetailedApplication from './pages/DetailedApplication';
+import RecommendationsPage from './pages/Dashboard/RecommendationsPage';
 
 
 
@@ -55,6 +56,10 @@ function App() {
                 <Route path="/favorites" element={<Favorites />} />
 
                 <Route path="/dashboard" element={<DashboardLayout />}>
+
+                <Route index element={<RecommendationsPage />} /> 
+  
+                  <Route path="recommendations" element={<RecommendationsPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="preferences" element={<PreferencesPage />} />
                   <Route path="documents" element={<DocumentsPage />} />

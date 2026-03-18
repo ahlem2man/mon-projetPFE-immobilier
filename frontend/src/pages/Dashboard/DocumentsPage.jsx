@@ -57,11 +57,32 @@ const DocumentsPage = () => {
         });
         if (res.data) {
           setCompletion(res.data.completionPercentage || 0);
+          
+          // Charger infos professionnelles
           if (res.data.professionalStatus) {
             setApplicantProfile({
               professionalStatus: res.data.professionalStatus.status || '',
               hasGuarantee: res.data.professionalStatus.hasGuarantee || false,
               guaranteeDetails: res.data.professionalStatus.guaranteeDetails || ''
+            });
+          }
+          
+          // 🆕 Charger les documents sauvegardés au backend
+          if (res.data.documents) {
+            setDocuments(prev => {
+              const updated = { ...prev };
+              Object.keys(res.data.documents).forEach(key => {
+                if (res.data.documents[key]) {
+                  // Les documents du backend sont des chemins (strings)
+                  // On les garde en mémoire avec un marker spécial
+                  updated[key] = {
+                    ...updated[key],
+                    uploadedPath: res.data.documents[key],
+                    file: null // Le fichier ne peut pas être re-uploaded depuis le browser
+                  };
+                }
+              });
+              return updated;
             });
           }
         }
@@ -93,19 +114,36 @@ const DocumentsPage = () => {
     }
   };
 
-  const removeFile = (key) => {
-    const fileName = documents[key].file?.name;
+  const removeFile = async (key) => {
+    const fileName = documents[key].file?.name || documents[key].uploadedPath?.split('/').pop();
     
     // Afficher une alerte de confirmation
     const confirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer le document "${fileName}" ?`);
     
     if (!confirmed) return; // Si l'utilisateur annule, ne rien faire
     
-    showNotify(`Le document "${fileName}" a été supprimé avec succès`, 'success');
+    // Si c'est un fichier uploadé (uploadedPath), supprimer du backend
+    if (documents[key].uploadedPath) {
+      try {
+        await axios.delete(
+          `http://localhost:5000/api/tenant/delete-doc/${key}`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }
+        );
+        showNotify(`Le document "${fileName}" a été supprimé avec succès`, 'success');
+      } catch (err) {
+        console.error("Erreur suppression:", err);
+        showNotify(`Erreur lors de la suppression`, 'error');
+        return;
+      }
+    } else {
+      showNotify(`Le document "${fileName}" a été supprimé avec succès`, 'success');
+    }
     
     setDocuments(prev => ({
       ...prev,
-      [key]: { ...prev[key], file: null }
+      [key]: { ...prev[key], file: null, uploadedPath: null }
     }));
   };
 
@@ -117,7 +155,7 @@ const DocumentsPage = () => {
     }
 
     // Validation : au moins la pièce d'identité requise
-    if (!documents.identityCard.file) {
+    if (!documents.identityCard.file && !documents.identityCard.uploadedPath) {
       showNotify('La pièce d\'identité est obligatoire', 'warning');
       return;
     }
@@ -141,36 +179,60 @@ const DocumentsPage = () => {
         }
       });
 
-      // ÉTAPE 2 : Envoyer les documents (FormData - documents seulement)
+      // ÉTAPE 2 : Envoyer les documents (FormData)
       const formData = new FormData();
+      let hasFilesToUpload = false;
 
-      // Ajouter tous les documents présents
+      // Ajouter tous les documents avec .file (en attente d'envoi)
+      // Les documents avec .uploadedPath sont déjà sur le backend
       Object.keys(documents).forEach(key => {
         if (documents[key].file) {
           formData.append(key, documents[key].file);
+          hasFilesToUpload = true;
         }
       });
 
-      const response = await axios.post(
-        'http://localhost:5000/api/tenant/upload-docs', 
-        formData, 
-        {
-          headers: { 
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}` 
+      // Si des documents à envoyer, les envoyer
+      if (hasFilesToUpload) {
+        const response = await axios.post(
+          'http://localhost:5000/api/tenant/upload-docs', 
+          formData, 
+          {
+            headers: { 
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${token}` 
+            }
           }
+        );
+
+        // Mettre à jour la complétude (Étape 8)
+        if (response.data.completionPercentage !== undefined) {
+          setCompletion(response.data.completionPercentage);
         }
-      );
 
-      // Mettre à jour la complétude (Étape 8)
-      if (response.data.completionPercentage !== undefined) {
-        setCompletion(response.data.completionPercentage);
+        // Recharger les documents depuis le backend
+        const refreshRes = await axios.get('http://localhost:5000/api/tenant/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (refreshRes.data?.documents) {
+          setDocuments(prev => {
+            const updated = { ...prev };
+            Object.keys(refreshRes.data.documents).forEach(key => {
+              if (refreshRes.data.documents[key]) {
+                updated[key] = {
+                  ...updated[key],
+                  uploadedPath: refreshRes.data.documents[key],
+                  file: null
+                };
+              }
+            });
+            return updated;
+          });
+        }
       }
 
-      // Le backend renvoie "message", on l'affiche
-      if (response.status === 200 || response.data.message) {
-        showNotify(`Félicitations ! Votre dossier locatif a été transmis ! Complétude: ${response.data.completionPercentage || completion}%`, 'success');
-      }
+      showNotify(`✅ Dossier locatif envoyé ! Complétude: ${completion}%`, 'success');
     } catch (err) {
       console.error("Erreur détaillée :", err.response?.data);
       showNotify(err.response?.data?.message || "Erreur lors de l'envoi du dossier.", 'error');
@@ -305,7 +367,7 @@ const DocumentsPage = () => {
                           borderRadius: '10px',
                           display: 'flex' 
                         }}>
-                          {documents[key].file ? 
+                          {documents[key].file || documents[key].uploadedPath ? 
                             <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 32 }} /> : 
                             <InsertDriveFileIcon sx={{ color: '#607d8b', fontSize: 32 }} />
                           }
@@ -320,14 +382,19 @@ const DocumentsPage = () => {
                           </Typography>
                           {documents[key].file && (
                             <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: '500', mt: 0.5 }}>
-                              ✓ Prêt : {documents[key].file.name}
+                              ✓ Prêt à envoyer: {documents[key].file.name}
+                            </Typography>
+                          )}
+                          {documents[key].uploadedPath && !documents[key].file && (
+                            <Typography variant="body2" sx={{ color: '#2196f3', fontWeight: '500', mt: 0.5 }}>
+                              ✓ Uploadé avec succès
                             </Typography>
                           )}
                         </Box>
                       </Box>
 
                       <Box>
-                        {!documents[key].file ? (
+                        {!documents[key].file && !documents[key].uploadedPath ? (
                           <Button
                             variant="contained"
                             component="label" 
@@ -378,7 +445,7 @@ const DocumentsPage = () => {
           variant="contained" 
           size="large"
           onClick={handleUploadAll}
-          disabled={uploading || !documents.identityCard.file}
+          disabled={uploading || (!documents.identityCard.file && !documents.identityCard.uploadedPath)}
           sx={{ 
             bgcolor: '#0a1930', 
             px: 10, 
