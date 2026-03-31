@@ -1,14 +1,13 @@
 const jwt = require('jsonwebtoken');
 
-module.exports = function (req, res, next) {
-  
-  // Support les deux formats : 'x-auth-token' et 'Authorization: Bearer <token>'
+// 1. La fonction pour protéger les routes (anciennement ton module.exports)
+exports.protect = (req, res, next) => {
   let token = req.header('x-auth-token');
   
   if (!token) {
     const authHeader = req.header('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.slice(7); // Enlève 'Bearer '
+      token = authHeader.slice(7);
     }
   }
 
@@ -23,4 +22,17 @@ module.exports = function (req, res, next) {
   } catch (err) {
     res.status(401).json({ message: 'Token non valide' });
   }
+};
+
+// 2. La nouvelle fonction pour restreindre selon le rôle (Admin, Agence, etc.)
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // roles est un tableau, ex: ['admin'] ou ['agency']
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: "Vous n'avez pas la permission d'effectuer cette action" 
+      });
+    }
+    next();
+  };
 };

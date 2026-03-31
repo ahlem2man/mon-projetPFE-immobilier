@@ -1,0 +1,133 @@
+import React, { useState, useEffect, useContext } from 'react';
+import { 
+  Box, Typography, TextField, Button, Grid, Paper, Avatar, 
+  IconButton, Alert, CircularProgress 
+} from '@mui/material';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import SaveIcon from '@mui/icons-material/Save';
+import axios from 'axios';
+import { AuthContext } from '../../context/AuthContext'; 
+
+const AgencyProfilePage = () => {
+  const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState(null);
+  
+  // On récupère le token une seule fois pour le réutiliser
+  const token = localStorage.getItem('token');
+
+  const [formData, setFormData] = useState({
+    agencyName: '',
+    licenseNumber: '',
+    address: '',
+    phoneNumber: '',
+    website: '',
+    description: ''
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/agency/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // On fusionne les données reçues avec l'état initial pour éviter les champs undefined
+        if (res.data) setFormData(prev => ({ ...prev, ...res.data }));
+      } catch (err) {
+        console.error("Erreur de chargement", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [token]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await axios.put('http://localhost:5000/api/agency/me', formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMessage({ type: 'success', text: 'Profil mis à jour avec succès !' });
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Erreur lors de la mise à jour.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <CircularProgress sx={{ display: 'block', m: 'auto', mt: 5 }} />;
+
+  return (
+    <Box sx={{ maxWidth: 900, mx: 'auto', py: 4, px: 2 }}>
+      <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 3, color: '#1A237E' }}>
+        Gestion du Profil
+      </Typography>
+
+      {message && <Alert severity={message.type} sx={{ mb: 3 }}>{message.text}</Alert>}
+
+      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            {/* Section Logo */}
+            <Grid item xs={12} sx={{ textAlign: 'center', mb: 2 }}>
+              <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                <Avatar 
+                  src={formData.logo} 
+                  sx={{ width: 120, height: 120, mb: 1, border: '3px solid #3F51B5', boxShadow: 2 }} 
+                />
+                <IconButton color="primary" component="label" sx={{ position: 'absolute', bottom: 10, right: -5, bgcolor: 'white', boxShadow: 2, '&:hover': { bgcolor: '#f5f5f5' } }}>
+                  <input hidden accept="image/*" type="file" />
+                  <PhotoCamera />
+                </IconButton>
+              </Box>
+              <Typography variant="body2" color="textSecondary">Logo officiel de l'agence</Typography>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="Nom de l'agence" name="agencyName" value={formData.agencyName} onChange={handleChange} required variant="outlined" />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="N° de Carte Professionnelle" name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} required variant="outlined" />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth label="Adresse Siège Social" name="address" value={formData.address} onChange={handleChange} variant="outlined" />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="Téléphone" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} variant="outlined" />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField fullWidth label="Site Web" name="website" value={formData.website} onChange={handleChange} variant="outlined" />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField fullWidth multiline rows={4} label="Description & Spécialités" name="description" value={formData.description} onChange={handleChange} variant="outlined" />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  size="large" 
+                  startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                  disabled={saving}
+                  sx={{ borderRadius: 2, px: 6, py: 1.5, bgcolor: '#3F51B5', fontWeight: 'bold' }}
+                >
+                  {saving ? "Enregistrement..." : "Sauvegarder le profil"}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </form>
+      </Paper>
+    </Box>
+  );
+};
+
+export default AgencyProfilePage;

@@ -15,7 +15,7 @@ const tenantRoutes = require('./routes/tenantRoutes');
 const requestRoutes = require('./routes/requestRoutes'); 
 const matchingRoutes = require('./routes/matchingRoutes');
 const initCronJobs = require('./utils/cronJobs');
-
+const agencyRoutes = require('./routes/agencyRoutes');
 
 dotenv.config();
 
@@ -51,7 +51,10 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/matchings', matchingRoutes);
 initCronJobs(); // Lancement des tâches planifiées
 
-app.get('/api/auth/profile', authMiddleware, async (req, res) => {
+app.use('/api/agency', agencyRoutes);
+
+
+app.get('/api/auth/profile', authMiddleware.protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);

@@ -28,8 +28,13 @@ import FavoritesPage from './pages/Dashboard/FavoritesPage';
 import MyApplications from './pages/MyApplications';
 import DetailedApplication from './pages/DetailedApplication';
 import RecommendationsPage from './pages/Dashboard/RecommendationsPage';
-
-
+import AgencyDashboardLayout from './pages/DashbordAgency/AgencyDashboardLayout';
+import AgencyOverview from './pages/DashbordAgency/AgencyOverview';
+import AgencyProfilePage from './pages/DashbordAgency/AgencyProfilePage';
+import AgencyVerificationSection from './pages/DashbordAgency/AgencyVerificationSection';
+import AgencySettings from './pages/DashbordAgency/AgencySettings';
+import AgencyReviews from './pages/DashbordAgency/AgencyReviews';
+import AgencySubscriptions from './pages/DashbordAgency/AgencySubscriptions';
 
 function App() {
   return (
@@ -82,15 +87,23 @@ function App() {
                   } 
                 />
 
-                {/*  Exemple de Route Spécialisée (Seulement les Agences) */}
+                {/*  Tableau de bord Agence (Seulement les Agences) */}
                 <Route 
-                  path="/dashboard-agency" 
+                  path="/agency" 
                   element={
                     <ProtectedRoute allowedRoles={['agency']}>
-                      <div>Espace Agence : Ajouter des biens (En construction)</div>
+                      <AgencyDashboardLayout />
                     </ProtectedRoute>
-                  } 
-                />
+                  }
+                >
+                  <Route index element={<AgencyOverview />} />
+                  <Route path="dashboard" element={<AgencyOverview />} />
+                  <Route path="profile" element={<AgencyProfilePage />} />
+                  <Route path="subscriptions" element={<AgencySubscriptions />} />
+                  <Route path="verification" element={<AgencyVerificationSection />} />
+                  <Route path="settings" element={<AgencySettings />} />
+                  <Route path="reviews" element={<AgencyReviews />} />
+                </Route>
               </Routes>
             </Box>
             <Footer />

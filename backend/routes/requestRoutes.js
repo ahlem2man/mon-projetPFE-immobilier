@@ -6,7 +6,7 @@ const { sendApplicationStatusEmail } = require('../utils/emailService');
 
 // CORRECTION ICI : On utilise le même chemin que dans index.js
 // On remonte d'un dossier (..) puis on va dans middleware/auth
-const protect = require('../middleware/auth'); 
+const { protect } = require('../middleware/auth'); 
 
 // Appliquer le middleware à toutes les routes du fichier
 router.use(protect);

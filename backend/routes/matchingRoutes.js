@@ -12,7 +12,7 @@ const {
   saveUserPreferences,
   getUserPreferences
 } = require('../controllers/matchingController');
-const protect = require('../middleware/auth'); 
+const { protect } = require('../middleware/auth'); 
 
 // PREFERENCES (Important: avant les autres routes)
 router.post('/save-preferences', protect, saveUserPreferences);

@@ -10,7 +10,7 @@ const {
   getFavoriteProperties 
 } = require('../controllers/propertyController');
 
-const authMiddleware = require('../middleware/auth');
+const { protect: authMiddleware } = require('../middleware/auth');
 
 // 1. Voir toutes les propriétés
 router.get('/', getAllProperties);

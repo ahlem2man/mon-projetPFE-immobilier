@@ -34,6 +34,77 @@ const Navbar = () => {
     logout();
   };
 
+  // Helper function to return menu items as array to avoid Fragment error in MUI Menu
+  const getMenuItems = () => {
+    if (user.role === 'agency') {
+      return [
+        <MenuItem 
+          key="agency-menu"
+          onClick={handleClose} 
+          component={Link} 
+          to="/agency"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <DashboardIcon sx={{ fontSize: 18, mr: 1.5, color: '#3F51B5' }} />
+          Mon Espace Agence
+        </MenuItem>,
+        <MenuItem 
+          key="agency-profile"
+          onClick={handleClose} 
+          component={Link} 
+          to="/agency/profile"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <DashboardIcon sx={{ fontSize: 18, mr: 1.5, color: '#5C6BC0' }} />
+          Profil Agence
+        </MenuItem>,
+        <MenuItem 
+          key="agency-verification"
+          onClick={handleClose} 
+          component={Link} 
+          to="/agency/verification"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <AssignmentIcon sx={{ fontSize: 18, mr: 1.5, color: '#7986CB' }} />
+          Verification
+        </MenuItem>
+      ];
+    } else {
+      return [
+        <MenuItem 
+          key="tenant-dashboard"
+          onClick={handleClose} 
+          component={Link} 
+          to="/dashboard/profile"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <DashboardIcon sx={{ fontSize: 18, mr: 1.5, color: '#00BCD4' }} />
+          Mon Espace Locataire
+        </MenuItem>,
+        <MenuItem 
+          key="tenant-applications"
+          onClick={handleClose} 
+          component={Link} 
+          to="/dashboard/applications"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <AssignmentIcon sx={{ fontSize: 18, mr: 1.5, color: '#2fa9c4' }} />
+          Mes Candidatures
+        </MenuItem>,
+        <MenuItem 
+          key="tenant-favorites"
+          onClick={handleClose} 
+          component={Link} 
+          to="/dashboard/favorites"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <FavoriteIcon sx={{ fontSize: 18, mr: 1.5, color: '#ff5252' }} />
+          Mes Favoris
+        </MenuItem>
+      ];
+    }
+  };
+
   return (
     <AppBar 
       position="static" 
@@ -255,50 +326,7 @@ const Navbar = () => {
                 </Box>
                 <Divider />
                 
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/dashboard/profile"
-                  sx={{
-                    py: 1.2,
-                    '&:hover': {
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                >
-                  <DashboardIcon sx={{ fontSize: 18, mr: 1.5, color: '#00BCD4' }} />
-                  Mon Espace Locataire
-                </MenuItem>
-
-                <MenuItem 
-  onClick={handleClose} 
-  component={Link} 
-  to="/dashboard/applications"
-  sx={{
-    py: 1.2,
-    '&:hover': {
-      backgroundColor: '#f5f5f5',
-    }
-  }}
->
-  <AssignmentIcon sx={{ fontSize: 18, mr: 1.5, color: '#2fa9c4' }} />
-  Mes Candidatures
-</MenuItem>
-
-                <MenuItem 
-                  onClick={handleClose} 
-                  component={Link} 
-                  to="/dashboard/favorites"
-                  sx={{
-                    py: 1.2,
-                    '&:hover': {
-                      backgroundColor: '#f5f5f5',
-                    }
-                  }}
-                >
-                  <FavoriteIcon sx={{ fontSize: 18, mr: 1.5, color: '#ff5252' }} />
-                  Mes Favoris
-                </MenuItem>
+                {getMenuItems()}
 
                 <Divider />
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
-const protect = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 const tenantController = require('../controllers/tenantController');
 
 // ========== PROFIL LOCATAIRE ==========
