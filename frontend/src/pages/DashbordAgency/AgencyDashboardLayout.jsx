@@ -13,6 +13,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 const drawerWidth = 260;
 
@@ -27,6 +28,7 @@ const AgencyDashboardLayout = () => {
     { text: 'Vue d\'ensemble', icon: <DashboardIcon />, path: '/agency/dashboard' },
     { text: 'Gestion du Profil', icon: <PersonIcon />, path: '/agency/profile' },
     { text: 'Mes Annonces', icon: <HomeWorkIcon />, path: '/agency/properties' },
+    { text: 'Analytics Global', icon: <BarChartIcon />, path: '/agency/analytics' },
     { text: 'Candidatures', icon: <PeopleIcon />, path: '/agency/applications' },
     { text: 'Avis Clients', icon: <RateReviewIcon />, path: '/agency/reviews' },
     { text: 'Abonnements', icon: <CreditCardIcon />, path: '/agency/subscriptions' },
@@ -60,11 +62,16 @@ const AgencyDashboardLayout = () => {
         <Divider sx={{ mx: 2 }} />
 
         <List sx={{ px: 2, mt: 2 }}>
-          {menuItems.map((item) => (
+          {menuItems.map((item) => {
+            // Vérifier si la route actuelle correspond (y compris les routes enfants)
+            const isSelected = location.pathname === item.path || 
+                              location.pathname.startsWith(item.path + '/');
+            
+            return (
             <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
               <ListItemButton 
                 onClick={() => navigate(item.path)}
-                selected={location.pathname === item.path}
+                selected={isSelected}
                 sx={{ 
                   borderRadius: 2,
                   '&.Mui-selected': { bgcolor: '#E8EAF6', color: '#3F51B5' },
@@ -75,7 +82,8 @@ const AgencyDashboardLayout = () => {
                 <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 'medium' }} />
               </ListItemButton>
             </ListItem>
-          ))}
+            );
+          })}
         </List>
 
         <Box sx={{ mt: 'auto', p: 2 }}>

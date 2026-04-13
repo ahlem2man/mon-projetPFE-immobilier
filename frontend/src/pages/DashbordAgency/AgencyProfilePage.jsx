@@ -76,7 +76,7 @@ const AgencyProfilePage = () => {
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             {/* Section Logo */}
-            <Grid item xs={12} sx={{ textAlign: 'center', mb: 2 }}>
+            <Grid size={{ xs: 12 }} sx={{ textAlign: 'center', mb: 2 }}>
               <Box sx={{ position: 'relative', display: 'inline-block' }}>
                 <Avatar 
                   src={formData.logo} 
@@ -90,26 +90,26 @@ const AgencyProfilePage = () => {
               <Typography variant="body2" color="textSecondary">Logo officiel de l'agence</Typography>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField fullWidth label="Nom de l'agence" name="agencyName" value={formData.agencyName} onChange={handleChange} required variant="outlined" />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField fullWidth label="N° de Carte Professionnelle" name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} required variant="outlined" />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField fullWidth label="Adresse Siège Social" name="address" value={formData.address} onChange={handleChange} variant="outlined" />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid xs={12} sm={6}>
               <TextField fullWidth label="Téléphone" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} variant="outlined" />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid xs={12} sm={6}>
               <TextField fullWidth label="Site Web" name="website" value={formData.website} onChange={handleChange} variant="outlined" />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField fullWidth multiline rows={4} label="Description & Spécialités" name="description" value={formData.description} onChange={handleChange} variant="outlined" />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                 <Button 
                   type="submit" 

@@ -35,6 +35,12 @@ import AgencyVerificationSection from './pages/DashbordAgency/AgencyVerification
 import AgencySettings from './pages/DashbordAgency/AgencySettings';
 import AgencyReviews from './pages/DashbordAgency/AgencyReviews';
 import AgencySubscriptions from './pages/DashbordAgency/AgencySubscriptions';
+import PropertiesList from './pages/DashbordAgency/PropertiesList';
+import AddPropertyStepper from './pages/DashbordAgency/AddPropertyStepper';
+import PropertyEditPage from './pages/DashbordAgency/PropertyEditPage';
+import AgencyApplications from './pages/DashbordAgency/AgencyApplications';
+import PropertyAnalyticsPage from './pages/DashbordAgency/PropertyAnalyticsPage';
+import GlobalAnalyticsPage from './pages/Dashboard/GlobalAnalyticsPage';
 
 function App() {
   return (
@@ -103,6 +109,12 @@ function App() {
                   <Route path="verification" element={<AgencyVerificationSection />} />
                   <Route path="settings" element={<AgencySettings />} />
                   <Route path="reviews" element={<AgencyReviews />} />
+                  <Route path="analytics" element={<GlobalAnalyticsPage />} />
+                  <Route path="applications" element={<AgencyApplications />} />
+                  <Route path="properties" element={<PropertiesList />} />
+                  <Route path="properties/add" element={<AddPropertyStepper />} />
+                  <Route path="properties/:id/edit" element={<PropertyEditPage />} />
+                  <Route path="properties/:id/analytics" element={<PropertyAnalyticsPage />} />
                 </Route>
               </Routes>
             </Box>

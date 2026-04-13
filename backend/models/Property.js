@@ -46,8 +46,12 @@ const propertySchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ['disponible', 'vendu', 'loué'], 
+    enum: ['disponible', 'louée', 'en attente', 'inactive'], 
     default: 'disponible' 
+  },
+  views: {
+    type: Number,
+    default: 0
   },
   owner: { 
     type: mongoose.Schema.Types.ObjectId, 

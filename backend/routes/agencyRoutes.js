@@ -10,6 +10,7 @@ router.use(protect);
 
 // Ces routes ne sont accessibles QUE par les utilisateurs avec le rôle 'agency'
 router.get('/me', restrictTo('agency'), agencyController.getAgencyProfile);
+router.get('/analytics/global', restrictTo('agency'), agencyController.getGlobalAnalytics);
 router.put('/me', restrictTo('agency'), agencyController.updateAgencyProfile);
 router.post('/upload-docs', restrictTo('agency'), upload.single('file'), agencyController.uploadVerificationDocs);
 router.post('/submit-verification', restrictTo('agency'), agencyController.submitForVerification);

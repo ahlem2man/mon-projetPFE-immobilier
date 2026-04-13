@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 
 const authRoutes = require('./routes/auth');
@@ -21,9 +22,13 @@ dotenv.config();
 
 const app = express();
 
-
-app.use(helmet()); 
-
+// Skip helmet for static files - it blocks CORP
+app.use((req, res, next) => {
+  if (req.path.startsWith('/uploads')) {
+    return next(); // Skip helmet middleware
+  }
+  helmet()(req, res, next);
+});
 
 app.use(cors({
   origin: [
@@ -32,12 +37,22 @@ app.use(cors({
     "http://localhost:5173",
     "http://localhost:3000"
   ], 
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 })); 
 
 app.use(express.json()); 
 
-
+// Serve static files with explicit CORS
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { 
+  maxAge: '1d', 
+  etag: false,
+  setHeaders: (res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 
 
 
@@ -45,14 +60,12 @@ console.log("Chargement des routes d'authentification...");
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/tenant', tenantRoutes);
-app.use('/uploads', express.static('uploads'));
 app.use('/api/requests', requestRoutes); // Branchement
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/matchings', matchingRoutes);
 initCronJobs(); // Lancement des tâches planifiées
 
 app.use('/api/agency', agencyRoutes);
-
 
 app.get('/api/auth/profile', authMiddleware.protect, async (req, res) => {
   try {
