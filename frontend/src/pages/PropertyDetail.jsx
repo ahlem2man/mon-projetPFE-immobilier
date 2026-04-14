@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 import { 
   Container, Grid, Typography, Box, Paper, 
   Chip, Divider, Stack, CircularProgress, IconButton, Snackbar, Alert, Button
@@ -35,7 +36,7 @@ const PropertyDetail = () => {
   useEffect(() => {
     const fetchProperty = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/properties/${id}`);
         setProperty(res.data.data);
         setLoading(false);
       } catch (err) {
@@ -56,7 +57,7 @@ const PropertyDetail = () => {
         }
 
         // ✨ Vérifier directement depuis Tenant pour être sûr
-        const tenantRes = await axios.get('http://localhost:5000/api/tenant/me', {
+        const tenantRes = await axios.get(`${API_BASE_URL}/tenant/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -79,7 +80,7 @@ const PropertyDetail = () => {
   const handleApply = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/requests', 
+      const response = await axios.post(`${API_BASE_URL}/requests`, 
         { 
           propertyId: property._id, 
           message: "Bonjour, mon dossier est complet et je suis très intéressé par votre bien." 
@@ -107,7 +108,7 @@ const PropertyDetail = () => {
     setLoadingFav(true);
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/properties/${id}/favorite`,
+        `${API_BASE_URL}/properties/${id}/favorite`,
         {},
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

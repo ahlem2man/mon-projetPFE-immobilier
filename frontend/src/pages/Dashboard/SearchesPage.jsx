@@ -4,6 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 import { useNavigate } from 'react-router-dom';
 
 export default function SearchesPage() {
@@ -28,7 +29,7 @@ export default function SearchesPage() {
   }, []);
 
   const fetchSearches = () => {
-    axios.get('http://localhost:5000/api/tenant/me', {
+    axios.get(`${API_BASE_URL}/tenant/me`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
       .then(res => setSearches(res.data.savedSearches || []))
@@ -65,7 +66,7 @@ export default function SearchesPage() {
     try {
       setLoading(true);
       await axios.put(
-        `http://localhost:5000/api/tenant/update-search/${editingSearchId}`,
+        `${API_BASE_URL}/tenant/update-search/${editingSearchId}`,
         { label: editLabel, filters: editFilters },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -82,7 +83,7 @@ export default function SearchesPage() {
   const handleDelete = async (searchId) => {
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/tenant/delete-search/${searchId}`, {
+      await axios.delete(`${API_BASE_URL}/tenant/delete-search/${searchId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setAlertMsg('Recherche supprimée !');
@@ -97,7 +98,7 @@ export default function SearchesPage() {
   const handleRelancer = async (searchId) => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/tenant/search/${searchId}`, {
+      const response = await axios.get(`${API_BASE_URL}/tenant/search/${searchId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       

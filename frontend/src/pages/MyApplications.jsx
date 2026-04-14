@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 import { buildImageUrl } from '../utils/imageUrl';
 
 const MyApplications = () => {
@@ -18,7 +19,7 @@ const MyApplications = () => {
     const fetchMyApplications = async () => {
       try {
         const token = localStorage.getItem('token'); // Assure-toi que le token est bien là
-        const res = await axios.get('http://localhost:5000/api/requests/my-requests', {
+        const res = await axios.get(`${API_BASE_URL}/requests/my-requests`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         

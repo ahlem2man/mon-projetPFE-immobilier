@@ -30,6 +30,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 
 const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
 const STATUS_COLORS = {
@@ -52,7 +53,7 @@ export default function GlobalAnalyticsPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/agency/analytics/global', {
+      const response = await axios.get(`${API_BASE_URL}/agency/analytics/global`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'x-auth-token': token

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Paper, Grid, MenuItem, Stack, Alert, AlertTitle } from '@mui/material';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 import SaveIcon from '@mui/icons-material/Save';
 
 export default function ProfilePage() {
@@ -17,7 +18,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tenant/me', {
+        const res = await axios.get(`${API_BASE_URL}/tenant/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         if (res.data) {
@@ -44,7 +45,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaved(false);
     try {
-      const res = await axios.put('http://localhost:5000/api/tenant/profile', profile, {
+      const res = await axios.put(`${API_BASE_URL}/tenant/profile`, profile, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setCompletion(res.data.completionPercentage);

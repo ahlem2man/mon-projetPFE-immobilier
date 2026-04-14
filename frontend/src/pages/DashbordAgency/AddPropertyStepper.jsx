@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 import { AMENITIES_OPTIONS } from '../../config/constants';
 
 const steps = ['Général', 'Caractéristiques', 'Photos & Validation'];
@@ -53,7 +54,7 @@ const AddPropertyStepper = () => {
     images.forEach(file => data.append('images', file));
 
     try {
-      const response = await axios.post('http://localhost:5000/api/properties', data, {
+      const response = await axios.post(`${API_BASE_URL}/properties`, data, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data' 

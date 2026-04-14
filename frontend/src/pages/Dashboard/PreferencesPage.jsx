@@ -4,6 +4,7 @@ import {
   MenuItem, Container, Alert, CircularProgress, InputAdornment, Grid 
 } from '@mui/material';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 import SaveIcon from '@mui/icons-material/Save';
 
 const PreferencesPage = () => {
@@ -22,7 +23,7 @@ const PreferencesPage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tenant/me', {
+        const res = await axios.get(`${API_BASE_URL}/tenant/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         if (res.data) {
@@ -68,7 +69,7 @@ const PreferencesPage = () => {
       console.log('📤 Envoi des préférences:', preferencesData);
 
       // Utiliser le nouvel endpoint dédié au matching
-      const res = await axios.post('http://localhost:5000/api/matchings/save-preferences', 
+      const res = await axios.post(`${API_BASE_URL}/matchings/save-preferences`, 
         { preferences: preferencesData }, 
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }

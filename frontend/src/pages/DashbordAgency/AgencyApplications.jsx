@@ -8,6 +8,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'; // Pour actions groupées
 import { Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 
 const AgencyApplications = () => {
   const [applications, setApplications] = useState([]);
@@ -21,7 +22,7 @@ const AgencyApplications = () => {
     try {
       setLoading(true);
       // Filtrage côté API ou local selon ta préférence
-      const res = await axios.get('http://localhost:5000/api/requests', {
+      const res = await axios.get(`${API_BASE_URL}/requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setApplications(res.data.data || []);

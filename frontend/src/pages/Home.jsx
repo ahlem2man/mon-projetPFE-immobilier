@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 import { Link, useSearchParams } from 'react-router-dom';
 import { 
   Container, Grid, Typography, Box, CircularProgress, Stack,
@@ -49,7 +50,7 @@ const Home = () => {
       params.append('sort', activeSort);
       params.append('limit', 6);
 
-      const res = await axios.get(`http://localhost:5000/api/properties?${params.toString()}`);
+      const res = await axios.get(`${API_BASE_URL}/properties?${params.toString()}`);
       
       setProperties(res.data.data);
       setTotalPages(res.data.totalPages);
@@ -127,7 +128,7 @@ const Home = () => {
       };
 
       await axios.post(
-        'http://localhost:5000/api/tenant/save-search',
+        `${API_BASE_URL}/tenant/save-search`,
         { label: searchLabel, filters },
         { headers: { Authorization: `Bearer ${token}` } }
       );
