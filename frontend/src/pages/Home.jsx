@@ -11,7 +11,6 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import SaveIcon from '@mui/icons-material/Save';
 import PropertyCard from '../components/PropertyCard';
 import FilterSidebar from '../components/FilterSidebar';
-import API_BASE_URL from '../config/api';
 
 const Home = () => {
   // --- RÉCUPÉRER LES QUERY PARAMS ---
