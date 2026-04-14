@@ -11,6 +11,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import axios from 'axios';
+import { buildImageUrl } from '../../utils/imageUrl';
 
 const PropertiesList = () => {
   const navigate = useNavigate();
@@ -173,7 +174,7 @@ const PropertiesList = () => {
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Avatar 
-                      src={`http://localhost:5000${prop.images[0]}`} 
+                      src={buildImageUrl(prop.images[0])} 
                       variant="rounded" 
                       sx={{ width: 50, height: 50, mr: 2, border: '1px solid #eee' }} 
                     />

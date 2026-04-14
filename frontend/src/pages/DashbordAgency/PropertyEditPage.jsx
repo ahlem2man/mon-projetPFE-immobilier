@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box, Stepper, Step, StepLabel, Button, TextField, MenuItem,
+  Box, Stepper, Step, StepLabel, Button, TextField, MenuItem, Select,
   Grid, Typography, Paper, IconButton, CircularProgress, Alert, Chip
 } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
+import { buildImageUrl } from '../../utils/imageUrl';
+import { AMENITIES_OPTIONS } from '../../config/constants';
 
 const steps = ['Général', 'Caractéristiques', 'Photos & Statut'];
 
@@ -28,7 +30,7 @@ const PropertyEditPage = () => {
     address: '',
     surface: '',
     rooms: '',
-    amenities: '',
+    amenities: [],
     status: 'disponible'
   });
 
@@ -52,7 +54,7 @@ const PropertyEditPage = () => {
           address: property.address,
           surface: property.surface,
           rooms: property.rooms,
-          amenities: Array.isArray(property.amenities) ? property.amenities.join(', ') : '',
+          amenities: Array.isArray(property.amenities) ? property.amenities : [],
           status: property.status
         });
         setExistingImages(property.images || []);
@@ -118,17 +120,16 @@ const PropertyEditPage = () => {
 
     // Ajouter les champs texte
     Object.keys(formData).forEach(key => {
-      if (key === 'amenities' && typeof formData[key] === 'string') {
-        // Convertir la chaîne amenities en array
-        const amenitiesArray = formData[key]
-          .split(',')
-          .map(a => a.trim())
-          .filter(a => a);
-        data.append('amenities', JSON.stringify(amenitiesArray));
+      if (key === 'amenities') {
+        // Envoyer amenities comme JSON (c'est un array)
+        data.append('amenities', JSON.stringify(formData[key]));
       } else {
         data.append(key, formData[key]);
       }
     });
+
+    // ✅ IMPORTANT: Envoyer les images existantes (après suppression)
+    data.append('existingImages', JSON.stringify(existingImages));
 
     // Ajouter les nouvelles images
     newImages.forEach(file => data.append('images', file));
@@ -269,14 +270,31 @@ const PropertyEditPage = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                Équipements disponibles
+              </Typography>
+              <Select
+                multiple
                 fullWidth
-                label="Équipements (séparés par des virgules)"
                 name="amenities"
-                placeholder="Wifi, Piscine, Parking..."
                 value={formData.amenities}
                 onChange={handleChange}
-              />
+                placeholder="Sélectionner les équipements..."
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} size="small" />
+                    ))}
+                  </Box>
+                )}
+                sx={{ borderRadius: 1 }}
+              >
+                {AMENITIES_OPTIONS.map((amenity) => (
+                  <MenuItem key={amenity} value={amenity}>
+                    {amenity}
+                  </MenuItem>
+                ))}
+              </Select>
             </Grid>
           </Grid>
         )}
@@ -295,7 +313,7 @@ const PropertyEditPage = () => {
                     <Grid item xs={6} sm={4} md={3} key={idx}>
                       <Box sx={{ position: 'relative' }}>
                         <img
-                          src={`http://localhost:5000${img}`}
+                          src={buildImageUrl(img)}
                           alt={`Property ${idx}`}
                           style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 4 }}
                         />

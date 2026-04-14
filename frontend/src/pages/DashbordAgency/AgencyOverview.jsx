@@ -24,13 +24,13 @@ const AgencyOverview = () => {
           Actions rapides
         </Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.5, borderRadius: 2, cursor: 'pointer', transition: 'all 0.2s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#3F51B5' }}>📋 Créer une annonce</Typography>
               <Typography variant="body2" color="textSecondary">Publier une nouvelle propriété</Typography>
             </Paper>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.5, borderRadius: 2, cursor: 'pointer', transition: 'all 0.2s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#3F51B5' }}>👥 Gérer candidatures</Typography>
               <Typography variant="body2" color="textSecondary">Consulter les demandes des locataires</Typography>

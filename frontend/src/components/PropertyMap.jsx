@@ -67,14 +67,17 @@ const PropertyMap = ({ lat, lng, title, location }) => {
   // Priorité: 1) location valide, 2) coords valides (non-tunisiennes), 3) Paris par défaut
   let position;
   
+  // Normaliser location en majuscule pour la recherche
+  const normalizedLocation = location ? location.charAt(0).toUpperCase() + location.slice(1).toLowerCase() : null;
+  
   // D'abord, vérifier si on a une location valide pour une ville française
-  if (location && cityCoordinates[location]) {
+  if (normalizedLocation && cityCoordinates[normalizedLocation]) {
     // Utiliser les coordonnées de la ville spécifiée
-    position = cityCoordinates[location];
+    position = cityCoordinates[normalizedLocation];
   } else if (!isTunisiaCoord && lat && lng) {
     // Si les coordonnées ne sont pas tunisiennes et sont valides, les utiliser
     position = [lat, lng];
-  } else if (location && !cityCoordinates[location]) {
+  } else if (location && !cityCoordinates[normalizedLocation]) {
     // Si on a un location mais c'est pas dans notre liste, on logs et on utilise Paris
     console.log(`Ville "${location}" non trouvée dans la base de données cartographique`);
     position = [48.8566, 2.3522];

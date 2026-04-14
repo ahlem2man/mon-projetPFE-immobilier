@@ -70,12 +70,48 @@ exports.getAllProperties = async (req, res) => {
 // @desc    Récupérer une annonce par ID
 exports.getPropertyById = async (req, res) => {
   try {
+    const ViewLog = require('../models/ViewLog');
     const property = await Property.findById(req.params.id).populate('owner', 'fullName email');
     if (!property) return res.status(404).json({ success: false, message: "Annonce non trouvée" });
     
-    // Logique Analytics : On incrémente les vues à chaque consultation unique
-    property.views = (property.views || 0) + 1;
-    await property.save();
+    // Logique Analytics : 1 vue par utilisateur par jour
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const userId = req.user?.id || null;
+    const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+    
+    // Déterminer le critère de recherche pour éviter doublon
+    let viewQuery = {
+      propertyId: property._id,
+      viewDate: todayStart
+    };
+    
+    if (userId) {
+      viewQuery.userId = userId;
+    } else {
+      viewQuery.ipAddress = ipAddress;
+    }
+    
+    // Vérifier si cet utilisateur/IP a déjà visité aujourd'hui
+    const existingView = await ViewLog.findOne(viewQuery);
+    
+    // Incrémenter les vues seulement si c'est la première visite du jour
+    if (!existingView) {
+      property.views = (property.views || 0) + 1;
+      await property.save();
+      
+      // Logger cette vue
+      await ViewLog.create({
+        propertyId: property._id,
+        userId: userId,
+        ipAddress: userId ? null : ipAddress, // Stocker IP seulement si anonyme
+        viewDate: todayStart
+      }).catch(err => {
+        // Ignorer les erreurs d'unicité (race condition)
+        console.log('Erreur ViewLog (race condition):', err.code);
+      });
+    }
 
     res.status(200).json({ success: true, data: property });
   } catch (error) {
@@ -93,10 +129,19 @@ exports.createProperty = async (req, res) => {
     // Si tu utilises Multer, req.files contient les chemins des images
     const imagePaths = req.files ? req.files.map(f => `/uploads/properties/${f.filename}`) : req.body.images;
 
-    // Parse amenities si c'est une string
+    // Parse amenities - peut arriver en JSON string ou string normale
     let amenities = req.body.amenities;
     if (typeof amenities === 'string') {
-      amenities = amenities ? amenities.split(',').map(a => a.trim()) : [];
+      try {
+        // Essayer de parser comme JSON d'abord
+        amenities = JSON.parse(amenities);
+      } catch (e) {
+        // Si pas JSON, splitter par virgule
+        amenities = amenities ? amenities.split(',').map(a => a.trim()).filter(a => a) : [];
+      }
+    }
+    if (!Array.isArray(amenities)) {
+      amenities = [];
     }
 
     const property = await Property.create({
@@ -176,15 +221,48 @@ exports.updateProperty = async (req, res) => {
     const allowedFields = ['title', 'description', 'price', 'location', 'address', 'type', 'surface', 'rooms', 'amenities', 'status'];
     Object.keys(req.body).forEach(key => {
       if (allowedFields.includes(key)) {
-        property[key] = req.body[key];
+        if (key === 'amenities') {
+          // Parse amenities correctement
+          let amenitiesValue = req.body[key];
+          if (typeof amenitiesValue === 'string') {
+            try {
+              amenitiesValue = JSON.parse(amenitiesValue);
+            } catch (e) {
+              amenitiesValue = amenitiesValue ? amenitiesValue.split(',').map(a => a.trim()).filter(a => a) : [];
+            }
+          }
+          property[key] = Array.isArray(amenitiesValue) ? amenitiesValue : [];
+        } else {
+          property[key] = req.body[key];
+        }
       }
     });
 
-    // Gestion des nouvelles images (optionnel)
+    // Gestion des images
+    let finalImages = [];
+    
+    // ✅ Récupérer les images existantes envoyées par le frontend (après suppression)
+    if (req.body.existingImages) {
+      try {
+        finalImages = JSON.parse(req.body.existingImages);
+      } catch (e) {
+        console.error('Erreur parsing existingImages:', e);
+        finalImages = property.images; // Fallback
+      }
+    }
+    
+    // Ajouter les NOUVELLES images uploadées
     if (req.files && req.files.length > 0) {
       const newImages = req.files.map(f => `/uploads/properties/${f.filename}`);
-      property.images = newImages;
+      finalImages = [...finalImages, ...newImages];
     }
+    
+    // Si aucune image n'a changé mais field pas envoyé, garder les anciennes
+    if (!req.body.existingImages && !req.files) {
+      finalImages = property.images;
+    }
+    
+    property.images = finalImages;
 
     await property.save();
     res.status(200).json({ success: true, data: property });

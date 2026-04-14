@@ -52,6 +52,30 @@ exports.updateAgencyProfile = async (req, res) => {
   }
 };
 
+// 2b. Upload du logo de l'agence
+exports.uploadLogo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Aucun fichier fourni" });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+
+    const agency = await Agency.findOneAndUpdate(
+      { userId: req.user.id },
+      { logo: fileUrl },
+      { new: true }
+    );
+    
+    res.status(200).json({ 
+      message: "Logo mis à jour avec succès",
+      data: agency
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur lors du téléchargement du logo", error: error.message });
+  }
+};
+
 // 3. Ajouter un document au dossier
 exports.uploadVerificationDocs = async (req, res) => {
   try {

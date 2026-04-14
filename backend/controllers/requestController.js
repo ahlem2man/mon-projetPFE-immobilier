@@ -171,3 +171,65 @@ exports.updateRequestStatus = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
+exports.getAgencyRequests = async (req, res) => {
+  try {
+    let query = { ownerId: req.user.id }; // L'agence ne voit que SES demandes
+
+    // Filtrage (Point 5 du Sprint)
+    if (req.query.status) query.status = req.query.status;
+    if (req.query.propertyId) query.propertyId = req.query.propertyId;
+
+    const requests = await Request.find(query)
+      .populate('tenantId', 'fullName email phone') // Info locataire (Point 4)
+      .populate('propertyId', 'title price images')
+      .sort('-createdAt');
+
+    res.status(200).json({ success: true, count: requests.length, data: requests });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+exports.getAgencyRequests = async (req, res) => {
+  try {
+    let query = { ownerId: req.user.id }; // L'agence ne voit que SES demandes
+
+    // Filtrage (Point 5 du Sprint)
+    if (req.query.status) query.status = req.query.status;
+    if (req.query.propertyId) query.propertyId = req.query.propertyId;
+
+    const requests = await Request.find(query)
+      .populate('tenantId', 'fullName email phone') // Info locataire (Point 4)
+      .populate('propertyId', 'title price images')
+      .sort('-createdAt');
+
+    res.status(200).json({ success: true, count: requests.length, data: requests });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.updateRequestStatus = async (req, res) => {
+  try {
+    const { status, internalNote, historyComment } = req.body;
+
+    const request = await Request.findOne({ _id: req.params.id, ownerId: req.user.id });
+
+    if (!request) return res.status(404).json({ message: "Demande introuvable" });
+
+    // Mise à jour du statut
+    if (status) {
+      request.status = status;
+      request.statusHistory.push({ status, comment: historyComment || "Statut modifié" });
+    }
+
+    // Ajout d'une note interne (Point 8)
+    if (internalNote) {
+      request.internalNotes.push({ content: internalNote });
+    }
+
+    await request.save();
+    res.status(200).json({ success: true, data: request });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};

@@ -1,37 +1,41 @@
 const mongoose = require('mongoose');
 
 const requestSchema = new mongoose.Schema({
-  // Le locataire qui postule
-  tenantId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
-  },
-  // Le bien immobilier concerné
-  propertyId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Property', 
-    required: true 
-  },
-  // L'agence ou le propriétaire (récupéré depuis Property.owner)
-  ownerId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
-  },
-  // Statut de la demande (Flux de candidature)
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', required: true },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  
   status: { 
     type: String, 
-    enum: ['En attente', 'En cours', 'Acceptée', 'Refusée'], 
+    // On ajoute 'Infos requises' pour le point 7 du Sprint
+    enum: ['En attente', 'En cours', 'Acceptée', 'Refusée', 'Infos requises'], 
     default: 'En attente' 
   },
-  // Message personnalisé du locataire
-  message: { 
-    type: String, 
-    trim: true,
-    maxlength: [500, "Le message ne peut pas dépasser 500 caractères"]
-  },
-  // Historique/Logs pour le suivi (Optionnel mais recommandé pour le Sprint 5)
+  
+  message: { type: String, trim: true, maxlength: 500 },
+
+  // --- AJOUTS SPRINT 9 ---
+  
+  // Pour le visualiseur de documents (Point 6)
+  documents: [{
+    name: String, // ex: "Fiche de paie"
+    url: String,  // Chemin vers le fichier
+    type: String  // PDF, PNG, etc.
+  }],
+
+  // Pour les statistiques (Point 9)
+  monthlyIncome: { type: Number }, 
+  employmentStatus: { type: String },
+
+  // Système de notes internes (Point 8)
+  internalNotes: [
+    {
+      author: { type: String, default: "Agence" },
+      content: { type: String },
+      date: { type: Date, default: Date.now }
+    }
+  ],
+
   statusHistory: [
     {
       status: { type: String, required: true },
@@ -40,8 +44,5 @@ const requestSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
-
-// Index pour accélérer la recherche des candidatures d'un locataire
-requestSchema.index({ tenantId: 1, propertyId: 1 });
 
 module.exports = mongoose.model('Request', requestSchema);

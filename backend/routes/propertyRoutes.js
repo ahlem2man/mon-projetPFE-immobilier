@@ -18,7 +18,7 @@ const {
 } = require('../controllers/propertyController');
 
 const { protect: authMiddleware, restrictTo } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const upload = require('../middleware/properties/uploadMiddleware');
 
 // ============================================
 // Routes PUBLIQUES (Tous les utilisateurs)
@@ -59,10 +59,10 @@ router.post('/:id/favorite', authMiddleware, toggleFavorite);
 // À la fin car elles matchent plus largement
 // ============================================
 // Créer une propriété avec upload images
-router.post('/', authMiddleware, restrictTo('agency'), upload.array('images', 10), createProperty);
+router.post('/', authMiddleware, restrictTo('agency'), upload, createProperty);
 
 // Éditer une propriété
-router.patch('/:id', authMiddleware, restrictTo('agency'), upload.array('images', 10), updateProperty);
+router.patch('/:id', authMiddleware, restrictTo('agency'), upload, updateProperty);
 
 // Supprimer une propriété
 router.delete('/:id', authMiddleware, restrictTo('agency'), deleteProperty);

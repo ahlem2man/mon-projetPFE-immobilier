@@ -9,6 +9,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import { AuthContext } from '../context/AuthContext';
+import { buildImageUrl } from '../utils/imageUrl';
 
 const DetailedApplication = () => {
   const { requestId } = useParams();
@@ -106,7 +107,7 @@ const DetailedApplication = () => {
           <Grid size={{ xs: 12, sm: 4 }}>
             <Box
               component="img"
-              src={application.propertyId?.images?.[0] || 'https://via.placeholder.com/200'}
+              src={buildImageUrl(application.propertyId?.images?.[0])}
               sx={{ width: '100%', height: 200, borderRadius: 2, objectFit: 'cover' }}
             />
           </Grid>

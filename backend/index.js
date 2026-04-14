@@ -32,9 +32,11 @@ app.use((req, res, next) => {
 
 app.use(cors({
   origin: [
-    "https://mon-projet-pfe-immobilier-7son.vercel.app",
+    process.env.FRONTEND_URL || "https://mon-projet-pfe-immobilier-7son.vercel.app",
     "https://mon-projet-pfe-immobilier.vercel.app",
     "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
     "http://localhost:3000"
   ], 
   credentials: true,
@@ -43,7 +45,8 @@ app.use(cors({
 })); 
 
 app.use(express.json()); 
-
+// Configuration pour obtenir l'IP correcte en production/localhost
+app.set('trust proxy', 1);
 // Serve static files with explicit CORS
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { 
   maxAge: '1d', 
@@ -57,6 +60,20 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 
 
 console.log("Chargement des routes d'authentification...");
+
+// Root route and health check
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'API Immobilier - Backend Server',
+    status: 'running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/tenant', tenantRoutes);
@@ -131,6 +148,15 @@ const seedTest = async () => {
     console.log("Aucun utilisateur trouvé pour créer une annonce.");
   }
 };
+
+// 404 Handler - must be last
+app.use((req, res) => {
+  res.status(404).json({ 
+    message: 'Endpoint not found',
+    path: req.path,
+    method: req.method
+  });
+});
 
 // Export pour Vercel
 if (process.env.VERCEL) {

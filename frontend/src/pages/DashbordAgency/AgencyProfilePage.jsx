@@ -6,13 +6,15 @@ import {
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
-import { AuthContext } from '../../context/AuthContext'; 
+import { AuthContext } from '../../context/AuthContext';
+import { buildImageUrl } from '../../utils/imageUrl'; 
 
 const AgencyProfilePage = () => {
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
   
   // On récupère le token une seule fois pour le réutiliser
   const token = localStorage.getItem('token');
@@ -23,7 +25,8 @@ const AgencyProfilePage = () => {
     address: '',
     phoneNumber: '',
     website: '',
-    description: ''
+    description: '',
+    logo: ''
   });
 
   useEffect(() => {
@@ -47,13 +50,69 @@ const AgencyProfilePage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogoFile(file);
+      // Afficher une preview du logo
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, logo: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadLogo = async () => {
+    if (!logoFile) return;
+    
+    const logoFormData = new FormData();
+    logoFormData.append('logo', logoFile);
+    
+    try {
+      const res = await axios.post('http://localhost:5000/api/agency/upload-logo', 
+        logoFormData,
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      setFormData({ ...formData, logo: res.data.data.logo });
+      setLogoFile(null);
+      return true;
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Erreur lors du téléchargement du logo.' });
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setMessage(null);
+    
+    // Uploader le logo si changé
+    if (logoFile) {
+      const logoSuccess = await uploadLogo();
+      if (!logoSuccess) {
+        setSaving(false);
+        return;
+      }
+    }
+    
     try {
       await axios.put('http://localhost:5000/api/agency/me', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // Recharger les données depuis le serveur pour s'assurer que tout est à jour
+      const res = await axios.get('http://localhost:5000/api/agency/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data) setFormData(prev => ({ ...prev, ...res.data }));
+      
       setMessage({ type: 'success', text: 'Profil mis à jour avec succès !' });
     } catch (err) {
       setMessage({ type: 'error', text: 'Erreur lors de la mise à jour.' });
@@ -79,11 +138,21 @@ const AgencyProfilePage = () => {
             <Grid size={{ xs: 12 }} sx={{ textAlign: 'center', mb: 2 }}>
               <Box sx={{ position: 'relative', display: 'inline-block' }}>
                 <Avatar 
-                  src={formData.logo} 
+                  src={buildImageUrl(formData.logo)} 
                   sx={{ width: 120, height: 120, mb: 1, border: '3px solid #3F51B5', boxShadow: 2 }} 
                 />
-                <IconButton color="primary" component="label" sx={{ position: 'absolute', bottom: 10, right: -5, bgcolor: 'white', boxShadow: 2, '&:hover': { bgcolor: '#f5f5f5' } }}>
-                  <input hidden accept="image/*" type="file" />
+                <IconButton 
+                  color="primary" 
+                  component="label" 
+                  sx={{ position: 'absolute', bottom: 10, right: -5, bgcolor: 'white', boxShadow: 2, '&:hover': { bgcolor: '#f5f5f5' } }}
+                >
+                  <input 
+                    id="logo-upload"
+                    hidden 
+                    accept="image/*" 
+                    type="file"
+                    onChange={handleLogoChange}
+                  />
                   <PhotoCamera />
                 </IconButton>
               </Box>

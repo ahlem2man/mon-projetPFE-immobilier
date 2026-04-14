@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { buildImageUrl } from '../utils/imageUrl';
 
 const MyApplications = () => {
   const [applications, setApplications] = useState([]);
@@ -76,7 +77,7 @@ const MyApplications = () => {
                     <Grid size={{ xs: 12, sm: 3 }}>
                       <Box 
                         component="img"
-                        src={app.propertyId?.images?.[0] || 'https://via.placeholder.com/150'}
+                        src={buildImageUrl(app.propertyId?.images?.[0])}
                         sx={{ width: '100%', height: 100, borderRadius: 2, objectFit: 'cover' }}
                       />
                     </Grid>

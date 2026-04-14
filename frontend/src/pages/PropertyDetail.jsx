@@ -12,7 +12,8 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { AuthContext } from '../context/AuthContext';
 import PropertyMap from '../components/PropertyMap';
-import ApplyModal from '../components/ApplyModal'; // Assure-toi que le fichier ApplyModal existe
+import ApplyModal from '../components/ApplyModal';
+import { buildImageUrl } from '../utils/imageUrl'; // Assure-toi que le fichier ApplyModal existe
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -148,7 +149,7 @@ const PropertyDetail = () => {
             {/* Image Principale */}
             <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden', height: '450px' }}>
               <img 
-                src={property.images[selectedImage]} 
+                src={buildImageUrl(property.images[selectedImage])} 
                 alt={property.title} 
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transition: '0.3s' }} 
               />
@@ -266,9 +267,13 @@ const PropertyDetail = () => {
               <Box>
                 <Typography variant="h6" gutterBottom fontWeight="bold">Équipements</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {property.amenities.map((item, index) => (
-                    <Chip key={index} label={item} size="small" variant="filled" sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }} />
-                  ))}
+                  {property.amenities && property.amenities.length > 0 ? (
+                    property.amenities.map((item, index) => (
+                      <Chip key={index} label={item} size="small" variant="filled" sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }} />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="textSecondary">Aucun équipement spécifié</Typography>
+                  )}
                 </Box>
               </Box>
 

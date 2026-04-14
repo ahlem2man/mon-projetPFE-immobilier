@@ -5,6 +5,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { buildImageUrl } from '../utils/imageUrl';
 import './PropertyCard.css'; 
 
 const PropertyCard = ({ property, onFavoriteChange }) => {
@@ -107,7 +108,7 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
       <div className="property-card">
         <div className="property-image">
           <img 
-            src={property.images && property.images[0] ? property.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'} 
+            src={buildImageUrl(property.images && property.images[0])} 
             alt={property.title} 
           />
           

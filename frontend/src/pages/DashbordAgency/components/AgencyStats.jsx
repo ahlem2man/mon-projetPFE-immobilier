@@ -70,7 +70,7 @@ const AgencyStats = () => {
       
       <Grid container spacing={3}>
         {/* CARTE 1 : Annonces Actives */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard 
             title="Annonces Publiées" 
             value={stats.activeAds} 
@@ -80,7 +80,7 @@ const AgencyStats = () => {
         </Grid>
 
         {/* CARTE 2 : Total Vues */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard 
             title="Total Vues Unique" 
             value={`${stats.totalViews} vues`} 
@@ -90,7 +90,7 @@ const AgencyStats = () => {
         </Grid>
 
         {/* CARTE 3 : Demandes en attente */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard 
             title="Candidatures Reçues" 
             value={stats.pendingRequests} 
@@ -100,7 +100,7 @@ const AgencyStats = () => {
         </Grid>
 
         {/* CARTE 4 : Note Moyenne */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard 
             title="Note de l'agence" 
             value={`${stats.rating || 0}/5`} 

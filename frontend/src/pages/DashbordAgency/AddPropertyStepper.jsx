@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { 
-  Box, Stepper, Step, StepLabel, Button, TextField, MenuItem, 
-  Grid, Typography, Paper, IconButton 
+  Box, Stepper, Step, StepLabel, Button, TextField, MenuItem, Select,
+  Grid, Typography, Paper, IconButton, Chip
 } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import axios from 'axios';
+import { AMENITIES_OPTIONS } from '../../config/constants';
 
 const steps = ['Général', 'Caractéristiques', 'Photos & Validation'];
 
@@ -20,7 +21,7 @@ const AddPropertyStepper = () => {
     address: '', 
     surface: '', 
     rooms: '', 
-    amenities: ''
+    amenities: []
   });
 
   const handleChange = (e) => {
@@ -38,19 +39,15 @@ const AddPropertyStepper = () => {
     const token = localStorage.getItem('token');
     const data = new FormData();
 
-    // Ajouter les champs texte (sauf amenities qu'on traite à part)
+    // Ajouter les champs texte
     Object.keys(formData).forEach(key => {
-      if (key !== 'amenities') {
+      if (key === 'amenities') {
+        // Envoyer amenities comme JSON array
+        data.append('amenities', JSON.stringify(formData[key]));
+      } else {
         data.append(key, formData[key]);
       }
     });
-
-    // Ajouter amenities correctement (comme string séparée par des virgules)
-    if (formData.amenities && Array.isArray(formData.amenities)) {
-      data.append('amenities', formData.amenities.join(', '));
-    } else {
-      data.append('amenities', '');
-    }
 
     // Ajouter les fichiers images
     images.forEach(file => data.append('images', file));
@@ -98,7 +95,31 @@ const AddPropertyStepper = () => {
             <Grid item xs={6}><TextField fullWidth label="Adresse" name="address" onChange={handleChange} /></Grid>
             <Grid item xs={6}><TextField fullWidth label="Surface (m²)" name="surface" type="number" onChange={handleChange} /></Grid>
             <Grid item xs={6}><TextField fullWidth label="Nombre de pièces" name="rooms" type="number" onChange={handleChange} /></Grid>
-            <Grid item xs={12}><TextField fullWidth label="Équipements (séparés par des virgules)" name="amenities" placeholder="Wifi, Piscine, Parking..." onChange={handleChange} /></Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                Équipements disponibles
+              </Typography>
+              <Select
+                multiple
+                fullWidth
+                name="amenities"
+                value={formData.amenities}
+                onChange={handleChange}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                {AMENITIES_OPTIONS.map((amenity) => (
+                  <MenuItem key={amenity} value={amenity}>
+                    {amenity}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
           </Grid>
         )}
 
