@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 import {
   Container, Typography, Card, CardContent, Grid, Box, 
   CircularProgress, Alert, Button, Paper, Chip, Stack, Divider,
@@ -28,7 +29,7 @@ const DetailedApplication = () => {
     const fetchApplication = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:5000/api/requests/${requestId}`, {
+        const res = await axios.get(`${API_BASE_URL}/requests/${requestId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setApplication(res.data);
@@ -65,7 +66,7 @@ const DetailedApplication = () => {
       setSubmitting(true);
       const token = localStorage.getItem('token');
       const res = await axios.patch(
-        `http://localhost:5000/api/requests/${requestId}`,
+        `${API_BASE_URL}/requests/${requestId}`,
         { status: newStatus, comment },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

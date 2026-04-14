@@ -9,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 
 const DocumentsPage = () => {
   // Situation professionnelle et garant
@@ -52,7 +53,7 @@ const DocumentsPage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tenant/me', {
+        const res = await axios.get(`${API_BASE_URL}/tenant/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         if (res.data) {
@@ -126,7 +127,7 @@ const DocumentsPage = () => {
     if (documents[key].uploadedPath) {
       try {
         await axios.delete(
-          `http://localhost:5000/api/tenant/delete-doc/${key}`,
+          `${API_BASE_URL}/tenant/delete-doc/${key}`,
           {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           }
@@ -168,7 +169,7 @@ const DocumentsPage = () => {
       const token = localStorage.getItem('token');
 
       // ÉTAPE 1 : Envoyer les infos de profil (JSON)
-      await axios.put('http://localhost:5000/api/tenant/profile', {
+      await axios.put(`${API_BASE_URL}/tenant/profile`, {
         professionalStatus: applicantProfile.professionalStatus,
         hasGuarantee: applicantProfile.hasGuarantee,
         guaranteeDetails: applicantProfile.guaranteeDetails
@@ -195,7 +196,7 @@ const DocumentsPage = () => {
       // Si des documents à envoyer, les envoyer
       if (hasFilesToUpload) {
         const response = await axios.post(
-          'http://localhost:5000/api/tenant/upload-docs', 
+          `${API_BASE_URL}/tenant/upload-docs`, 
           formData, 
           {
             headers: { 
@@ -211,7 +212,7 @@ const DocumentsPage = () => {
         }
 
         // Recharger les documents depuis le backend
-        const refreshRes = await axios.get('http://localhost:5000/api/tenant/me', {
+        const refreshRes = await axios.get(`${API_BASE_URL}/tenant/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

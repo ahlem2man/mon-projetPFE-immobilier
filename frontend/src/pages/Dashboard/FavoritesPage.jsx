@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 import PropertyCard from '../../components/PropertyCard';
 import { Container, Typography, Grid, CircularProgress, Box, Button } from '@mui/material';
 
@@ -16,7 +17,7 @@ const FavoritesPage = () => {
       }
       
       // Récupérer les IDs des favoris depuis le profil Tenant
-      const tenantRes = await axios.get('http://localhost:5000/api/tenant/me', {
+      const tenantRes = await axios.get(`${API_BASE_URL}/tenant/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -31,7 +32,7 @@ const FavoritesPage = () => {
 
       // Récupérer les détails de chaque propriété favorite
       const favPropsPromises = favIds.map(id =>
-        axios.get(`http://localhost:5000/api/properties/${id}`, {
+        axios.get(`${API_BASE_URL}/properties/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );

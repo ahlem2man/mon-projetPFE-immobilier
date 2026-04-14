@@ -4,6 +4,7 @@ import {
   Button, TextField, Typography, Box, Alert, CircularProgress 
 } from '@mui/material';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 
 const ApplyModal = ({ open, handleClose, propertyId, propertyTitle, completionRate }) => {
   // 1. On s'assure que message est TOUJOURS une chaîne (évite l'erreur de ton précédent message)
@@ -25,7 +26,7 @@ const ApplyModal = ({ open, handleClose, propertyId, propertyTitle, completionRa
     try {
       const token = localStorage.getItem('token');
       // Utilisation du header Authorization (Bearer token)
-      await axios.post('http://localhost:5000/api/requests', 
+      await axios.post(`${API_BASE_URL}/requests`, 
         { propertyId, message },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

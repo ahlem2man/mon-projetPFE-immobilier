@@ -4,6 +4,7 @@ import { Button, IconButton, Snackbar, Alert } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 import { AuthContext } from '../context/AuthContext';
 import { buildImageUrl } from '../utils/imageUrl';
 import './PropertyCard.css'; 
@@ -31,7 +32,7 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
 
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/tenant/favorites/check/${property._id}`,
+          `${API_BASE_URL}/tenant/favorites/check/${property._id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setIsFav(res.data.isFavorite || false);
@@ -64,7 +65,7 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
     try {
       // Utilise l'API Sprint 4 : POST ou DELETE selon l'état actuel
       const method = isFav ? 'delete' : 'post';
-      const endpoint = `http://localhost:5000/api/tenant/favorites/${property._id}`;
+      const endpoint = `${API_BASE_URL}/tenant/favorites/${property._id}`;
       
       if (isFav) {
         await axios.delete(endpoint, {

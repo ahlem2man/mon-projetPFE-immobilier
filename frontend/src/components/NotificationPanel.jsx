@@ -15,6 +15,7 @@ import {
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ClearIcon from '@mui/icons-material/Clear';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 
 export default function NotificationPanel() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -34,7 +35,7 @@ export default function NotificationPanel() {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/notifications', {
+      const res = await axios.get(`${API_BASE_URL}/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setNotifications(res.data);
@@ -59,7 +60,7 @@ export default function NotificationPanel() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:5000/api/notifications/${notificationId}/read`,
+        `${API_BASE_URL}/notifications/${notificationId}/read`,
         {},
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

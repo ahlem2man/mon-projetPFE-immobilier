@@ -3,6 +3,7 @@ import { Person, Settings, Description, Favorite, Search } from '@mui/icons-mate
 import { Link, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const drawerWidth = 260;
@@ -13,7 +14,7 @@ export default function DashboardLayout() {
   useEffect(() => {
     const fetchCompletion = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tenant/me', {
+        const res = await axios.get(`${API_BASE_URL}/tenant/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setCompletion(res.data?.completionPercentage || 0);
