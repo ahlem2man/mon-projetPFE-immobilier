@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
+import Properties from './pages/Properties';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import FAQ from './pages/FAQ';
@@ -39,8 +40,10 @@ import PropertiesList from './pages/DashbordAgency/PropertiesList';
 import AddPropertyStepper from './pages/DashbordAgency/AddPropertyStepper';
 import PropertyEditPage from './pages/DashbordAgency/PropertyEditPage';
 import AgencyApplications from './pages/DashbordAgency/AgencyApplications';
+import ApplicationDetail from './pages/DashbordAgency/ApplicationDetail';
 import PropertyAnalyticsPage from './pages/DashbordAgency/PropertyAnalyticsPage';
 import GlobalAnalyticsPage from './pages/Dashboard/GlobalAnalyticsPage';
+import DashboardHomePage from './pages/Dashboard/DashboardHomePage';
 
 function App() {
   return (
@@ -54,6 +57,7 @@ function App() {
               <Routes>
                 {/* Routes Publiques : Accessibles par tout le monde */}
                 <Route path="/" element={<Home />} />
+                <Route path="/properties" element={<Properties />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />
@@ -68,8 +72,8 @@ function App() {
 
                 <Route path="/dashboard" element={<DashboardLayout />}>
 
-                <Route index element={<RecommendationsPage />} /> 
-  
+                <Route index element={<DashboardHomePage />} /> 
+                  <Route path="home" element={<DashboardHomePage />} />
                   <Route path="recommendations" element={<RecommendationsPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="preferences" element={<PreferencesPage />} />
@@ -111,6 +115,7 @@ function App() {
                   <Route path="reviews" element={<AgencyReviews />} />
                   <Route path="analytics" element={<GlobalAnalyticsPage />} />
                   <Route path="applications" element={<AgencyApplications />} />
+                  <Route path="applications/:id" element={<ApplicationDetail />} />
                   <Route path="properties" element={<PropertiesList />} />
                   <Route path="properties/add" element={<AddPropertyStepper />} />
                   <Route path="properties/:id/edit" element={<PropertyEditPage />} />

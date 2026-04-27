@@ -32,7 +32,7 @@ const DetailedApplication = () => {
         const res = await axios.get(`${API_BASE_URL}/requests/${requestId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        setApplication(res.data);
+        setApplication(res.data.data);
       } catch (err) {
         setError("Impossible de charger les détails de la candidature.");
         console.error(err);
@@ -71,7 +71,7 @@ const DetailedApplication = () => {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      setApplication(res.data.request);
+      setApplication(res.data.data);
       showToast(`✓ Candidature mise à jour: ${newStatus}`, 'success');
       setOpenDialog(false);
       setNewStatus('');

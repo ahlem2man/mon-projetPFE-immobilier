@@ -1,5 +1,5 @@
 import { Box, List, ListItem, ListItemIcon, ListItemText, Drawer, AppBar, Toolbar, Typography, LinearProgress, Stack, Paper } from '@mui/material';
-import { Person, Settings, Description, Favorite, Search } from '@mui/icons-material';
+import { Person, Settings, Description, Favorite, Search, Home } from '@mui/icons-material';
 import { Link, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -28,6 +28,7 @@ export default function DashboardLayout() {
   }, []);
 
   const menuItems = [
+    { text: 'Accueil', icon: <Home />, path: '/dashboard' },
     { text: 'Profil', icon: <Person />, path: '/dashboard/profile' },
     { text: 'Préférences', icon: <Settings />, path: '/dashboard/preferences' },
     { text: 'Mes Documents', icon: <Description />, path: '/dashboard/documents' },

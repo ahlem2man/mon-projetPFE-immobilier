@@ -193,4 +193,100 @@ router.get('/profile', authMiddleware, async (req, res) => {
   }
 });
 
+// 🔐 CHANGER LE MOT DE PASSE (depuis les paramètres)
+router.post('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Tous les champs sont requis' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'Les nouveaux mots de passe ne correspondent pas' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    // Vérifier le mot de passe actuel
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Le mot de passe actuel est incorrect' });
+    }
+
+    // Mettre à jour avec le nouveau mot de passe
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ success: true, message: 'Mot de passe mis à jour avec succès' });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur: ' + err.message });
+  }
+});
+
+// 🔔 METTRE À JOUR LES PRÉFÉRENCES DE NOTIFICATIONS
+router.patch('/notifications', authMiddleware, async (req, res) => {
+  try {
+    const { emailAlerts, marketingEmails } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $set: {
+          'preferences.emailAlerts': emailAlerts,
+          'preferences.marketingEmails': marketingEmails
+        }
+      },
+      { new: true }
+    ).select('-password');
+
+    res.json({ success: true, message: 'Notifications mises à jour', preferences: user.preferences });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur: ' + err.message });
+  }
+});
+
+// 🗑️ DÉSACTIVER/SUPPRIMER LE COMPTE AGENCE
+router.delete('/account', authMiddleware, async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ message: 'Le mot de passe est requis pour supprimer le compte' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    // Vérifier le mot de passe
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Mot de passe incorrect' });
+    }
+
+    // Supprimer les annonces associées
+    if (user.role === 'agency') {
+      const Property = require('../models/Property');
+      await Property.deleteMany({ owner: req.user.id });
+    }
+
+    // Supprimer l'utilisateur
+    await User.findByIdAndDelete(req.user.id);
+
+    res.json({ success: true, message: 'Compte supprimé avec succès' });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur: ' + err.message });
+  }
+});
+
 module.exports = router;

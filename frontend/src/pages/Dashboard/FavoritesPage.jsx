@@ -16,29 +16,14 @@ const FavoritesPage = () => {
         return;
       }
       
-      // Récupérer les IDs des favoris depuis le profil Tenant
-      const tenantRes = await axios.get(`${API_BASE_URL}/tenant/me`, {
+      // Récupérer directement les favoris avec leurs données complètes
+      // Cet endpoint retourne SEULEMENT les propriétés valides (pas de 404)
+      const response = await axios.get(`${API_BASE_URL}/properties/user/favorites`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const favIds = tenantRes.data.favoriteProperties || [];
-
-      // Si aucun favori, quitter
-      if (favIds.length === 0) {
-        setFavorites([]);
-        setLoading(false);
-        return;
-      }
-
-      // Récupérer les détails de chaque propriété favorite
-      const favPropsPromises = favIds.map(id =>
-        axios.get(`${API_BASE_URL}/properties/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      );
-
-      const responses = await Promise.all(favPropsPromises);
-      setFavorites(responses.map(res => res.data.data || res.data));
+      const favoritesData = response.data.data || response.data || [];
+      setFavorites(Array.isArray(favoritesData) ? favoritesData : []);
     } catch (err) {
       console.error("Erreur lors du chargement des favoris", err);
       setFavorites([]);
@@ -51,11 +36,13 @@ const FavoritesPage = () => {
     fetchFavorites();
   }, []);
 
-  // Rafraîchir la liste quand un favori est supprimé
+  // Mettre à jour la liste quand un favori est ajouté/retiré
   const handleFavoriteChange = (propertyId, isFavorite) => {
     if (!isFavorite) {
-      // Propriété supprimée des favoris → rafraîchir la liste
-      fetchFavorites();
+      // Propriété supprimée des favoris → la retirer du state
+      setFavorites(prevFavorites => 
+        prevFavorites.filter(prop => prop._id !== propertyId)
+      );
     }
   };
 
@@ -83,7 +70,7 @@ const FavoritesPage = () => {
       {favorites.length > 0 ? (
         <Grid container spacing={3}>
           {favorites.map((property) => (
-            <Grid item key={property._id} xs={12} sm={6} md={4} lg={3}>
+            <Grid key={property._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <PropertyCard 
                 property={property} 
                 onFavoriteChange={handleFavoriteChange}

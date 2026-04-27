@@ -15,14 +15,22 @@ const AgencyApplications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('Tous');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
   const [selected, setSelected] = useState([]); // Point 10 : Actions groupées
+  const [bulkStatus, setBulkStatus] = useState(''); // Statut pour action groupée
+  const [bulkLoading, setBulkLoading] = useState(false);
   const token = localStorage.getItem('token');
 
-  const fetchApplications = async () => {
+  const fetchApplications = async (status = 'Tous', startDate = '', endDate = '') => {
     try {
       setLoading(true);
-      // Filtrage côté API ou local selon ta préférence
-      const res = await axios.get(`${API_BASE_URL}/requests`, {
+      let params = new URLSearchParams();
+      if (status !== 'Tous') params.append('status', status.toLowerCase());
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      
+      const res = await axios.get(`${API_BASE_URL}/requests/agency?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setApplications(res.data.data || []);
@@ -33,30 +41,56 @@ const AgencyApplications = () => {
     }
   };
 
-  useEffect(() => { fetchApplications(); }, []);
+  useEffect(() => { 
+    fetchApplications(filterStatus, filterStartDate, filterEndDate); 
+  }, [filterStatus, filterStartDate, filterEndDate]);
 
   // --- LOGIQUE DE STATISTIQUES (Point 9) ---
   const stats = {
     total: applications.length,
-    pending: applications.filter(a => a.status === 'en attente').length,
-    accepted: applications.filter(a => a.status === 'acceptée').length
+    pending: applications.filter(a => a.status?.toLowerCase() === 'en attente').length,
+    accepted: applications.filter(a => a.status?.toLowerCase() === 'acceptée').length
   };
 
-  // --- LOGIQUE DE FILTRAGE (Point 5) ---
-  const filteredApps = filterStatus === 'Tous' 
-    ? applications 
-    : applications.filter(app => app.status === filterStatus.toLowerCase());
+  // ✅ PLUS de filtrage client-side - le backend le fait déjà!
+  // On utilise directement 'applications' qui sont déjà filtrées par le serveur
+  const filteredApps = applications;
 
   // --- LOGIQUE DE SÉLECTION (Point 10) ---
   const handleSelectOne = (id) => {
     setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
+  // ✨ NOUVEAU: Actions groupées
+  const handleBulkUpdate = async () => {
+    if (!bulkStatus || selected.length === 0) {
+      alert('Veuillez sélectionner un statut et au moins une candidature');
+      return;
+    }
+
+    try {
+      setBulkLoading(true);
+      const res = await axios.patch(
+        `${API_BASE_URL}/requests/bulk/update-status`,
+        { requestIds: selected, status: bulkStatus },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      alert(`✅ ${res.data.data.updated} dossier(s) mis à jour en ${bulkStatus}`);
+      setSelected([]);
+      setBulkStatus('');
+      fetchApplications(filterStatus, filterStartDate, filterEndDate);
+    } catch (err) {
+      alert('Erreur: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'en attente': return 'warning';
       case 'acceptée': return 'success';
-      case 'rejetée': return 'error';
+      case 'refusée': return 'error';
       default: return 'default';
     }
   };
@@ -68,19 +102,19 @@ const AgencyApplications = () => {
       
       {/* 📊 SECTION STATISTIQUES (Point 9) */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#E8EAF6' }}>
             <Typography variant="h4" color="primary">{stats.total}</Typography>
             <Typography variant="body2">Candidatures Totales</Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#FFF3E0' }}>
             <Typography variant="h4" color="orange">{stats.pending}</Typography>
             <Typography variant="body2">En attente de réponse</Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#E8F5E9' }}>
             <Typography variant="h4" color="green">{stats.accepted}</Typography>
             <Typography variant="body2">Dossiers Approuvés</Typography>
@@ -88,34 +122,85 @@ const AgencyApplications = () => {
         </Grid>
       </Grid>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1A237E' }}>
           Gestion des Candidatures
         </Typography>
 
         {/* 🔍 FILTRAGE (Point 5) */}
-        <TextField
-          select
-          size="small"
-          label="Statut"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          sx={{ width: 150 }}
-        >
-          {['Tous', 'En attente', 'En cours', 'Acceptée', 'Rejetée'].map(s => (
-            <MenuItem key={s} value={s}>{s}</MenuItem>
-          ))}
-        </TextField>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <TextField
+            select
+            size="small"
+            label="Statut"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            sx={{ width: 150 }}
+          >
+            {['Tous', 'En attente', 'En cours', 'Acceptée', 'Refusée', 'Infos requises'].map(s => (
+              <MenuItem key={s} value={s}>{s}</MenuItem>
+            ))}
+          </TextField>
+
+          {/* ✨ NOUVEAU: Filtars de date */}
+          <TextField
+            type="date"
+            size="small"
+            label="Date début"
+            value={filterStartDate}
+            onChange={(e) => setFilterStartDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 150 }}
+          />
+          <TextField
+            type="date"
+            size="small"
+            label="Date fin"
+            value={filterEndDate}
+            onChange={(e) => setFilterEndDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 150 }}
+          />
+        </Box>
       </Box>
 
       {/* ⚡ ACTIONS GROUPÉES (Point 10) */}
       {selected.length > 0 && (
-        <Alert severity="info" sx={{ mb: 2 }} action={
-          <Button color="inherit" size="small" startIcon={<DeleteSweepIcon />}>
-            Traiter {selected.length} dossiers
-          </Button>
-        }>
-          {selected.length} candidature(s) sélectionnée(s)
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <Typography sx={{ flex: 1 }}>
+              {selected.length} candidature(s) sélectionnée(s)
+            </Typography>
+            <TextField
+              select
+              size="small"
+              label="Nouveau statut"
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(e.target.value)}
+              sx={{ width: 150 }}
+            >
+              {['En attente', 'En cours', 'Acceptée', 'Refusée', 'Infos requises'].map(s => (
+                <MenuItem key={s} value={s}>{s}</MenuItem>
+              ))}
+            </TextField>
+            <Button 
+              variant="contained" 
+              color="primary"
+              startIcon={<DeleteSweepIcon />}
+              onClick={handleBulkUpdate}
+              disabled={bulkLoading || !bulkStatus}
+              size="small"
+            >
+              {bulkLoading ? 'Traitement...' : 'Appliquer'}
+            </Button>
+            <Button 
+              variant="outlined"
+              onClick={() => setSelected([])}
+              size="small"
+            >
+              Annuler
+            </Button>
+          </Box>
         </Alert>
       )}
 
@@ -132,7 +217,7 @@ const AgencyApplications = () => {
               </TableCell>
               <TableCell>Locataire</TableCell>
               <TableCell>Propriété</TableCell>
-              <TableCell>Revenus</TableCell> {/* Ajout pour analyse rapide */}
+              <TableCell>Revenus</TableCell>
               <TableCell>Statut</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -140,9 +225,7 @@ const AgencyApplications = () => {
           <TableBody>
             {filteredApps.map((app) => (
               <TableRow key={app._id} hover selected={selected.includes(app._id)}>
-                <TableCell padding="checkbox">
-                  <Checkbox checked={selected.includes(app._id)} onChange={() => handleSelectOne(app._id)} />
-                </TableCell>
+                <TableCell padding="checkbox"><Checkbox checked={selected.includes(app._id)} onChange={() => handleSelectOne(app._id)} /></TableCell>
                 <TableCell>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>{app.tenantId?.fullName}</Typography>
                   <Typography variant="caption" color="textSecondary">{app.tenantId?.email}</Typography>
@@ -154,7 +237,7 @@ const AgencyApplications = () => {
                 </TableCell>
                 <TableCell align="right">
                   <Tooltip title="Ouvrir le dossier détaillé">
-                    <IconButton component={RouterLink} to={`/dashboard/applications/${app._id}`} color="primary">
+                    <IconButton component={RouterLink} to={`/agency/applications/${app._id}`} color="primary">
                       <VisibilityIcon />
                     </IconButton>
                   </Tooltip>

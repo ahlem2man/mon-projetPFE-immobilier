@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 // On récupère les fonctions du controller
-const { submitRequest, getMyRequests, getRequestById, updateRequestStatus } = require('../controllers/requestController');
+const { submitRequest, getMyRequests, getRequestById, updateRequestStatus, getAgencyRequests, bulkUpdateRequests, getAgencyStatistics } = require('../controllers/requestController');
 const { sendApplicationStatusEmail } = require('../utils/emailService');
 
 // CORRECTION ICI : On utilise le même chemin que dans index.js
@@ -13,9 +13,12 @@ router.use(protect);
 
 // Les routes
 router.post('/', submitRequest);
-router.get('/my-requests', getMyRequests);           // ✨ SPÉCIFIQUE avant GÉNÉRIQUE
-router.get('/:requestId', getRequestById);          // ✨ GÉNÉRIQUE après SPÉCIFIQUE
-router.patch('/:requestId', updateRequestStatus);
+router.get('/my-requests', getMyRequests);           // ✨ SPÉCIFIQUE pour locataires
+router.get('/agency/stats', getAgencyStatistics);    // ✨ NOUVEAU: Statistiques avancées
+router.get('/agency', getAgencyRequests);            // ✨ SPÉCIFIQUE pour agences
+router.patch('/bulk/update-status', bulkUpdateRequests); // ✨ NOUVEAU: Actions groupées
+router.get('/:id', getRequestById);                 // ✨ GÉNÉRIQUE après SPÉCIFIQUE
+router.patch('/:id', updateRequestStatus);
 
 // 🧪 Route de TEST SEULEMENT - Envoyer un email de test
 router.post('/test/send-email', async (req, res) => {

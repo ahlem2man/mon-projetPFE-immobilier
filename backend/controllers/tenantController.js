@@ -540,6 +540,13 @@ exports.getFavorites = async (req, res) => {
 exports.addFavorite = async (req, res) => {
   try {
     const { propertyId } = req.params;
+    const Property = require('../models/Property');
+
+    // Vérifier si la propriété existe
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ message: "Propriété non trouvée" });
+    }
 
     // Vérifier si le Tenant existe
     let tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
@@ -562,7 +569,18 @@ exports.addFavorite = async (req, res) => {
       );
     }
 
-    res.json({ message: "Propriété ajoutée aux favoris !", favorites: tenant.favoriteProperties });
+    // Mettre à jour AUSSI la Property pour garder la sync
+    await Property.findByIdAndUpdate(
+      propertyId,
+      { $addToSet: { favorites: req.user.id || req.user._id } },
+      { new: true }
+    );
+
+    res.json({ 
+      message: "Propriété ajoutée aux favoris !", 
+      favorites: tenant.favoriteProperties,
+      success: true 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -572,6 +590,7 @@ exports.addFavorite = async (req, res) => {
 exports.removeFavorite = async (req, res) => {
   try {
     const { propertyId } = req.params;
+    const Property = require('../models/Property');
 
     // Vérifier si le Tenant existe
     let tenant = await Tenant.findOne({ userId: req.user.id || req.user._id });
@@ -581,13 +600,25 @@ exports.removeFavorite = async (req, res) => {
       return res.status(404).json({ message: "Tenant not found" });
     }
 
-    tenant = await Tenant.findOneAndUpdate(
-      { userId: req.user.id || req.user._id },
-      { $pull: { favoriteProperties: propertyId } },
-      { new: true }
-    );
+    // Mettre à jour SIMULTANÉMENT le Tenant et la Property
+    const [updatedTenant, updatedProperty] = await Promise.all([
+      Tenant.findOneAndUpdate(
+        { userId: req.user.id || req.user._id },
+        { $pull: { favoriteProperties: propertyId } },
+        { new: true }
+      ),
+      Property.findByIdAndUpdate(
+        propertyId,
+        { $pull: { favorites: req.user.id || req.user._id } },
+        { new: true }
+      )
+    ]);
 
-    res.json({ message: "Propriété supprimée des favoris !", favorites: tenant.favoriteProperties });
+    res.json({ 
+      message: "Propriété supprimée des favoris !", 
+      favorites: updatedTenant.favoriteProperties,
+      success: true 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

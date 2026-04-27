@@ -22,6 +22,18 @@ const userSchema = new mongoose.Schema({
   },
   // ------------------------------
 
+  // --- AJOUTS SPRINT 9 (Applications/Candidatures) ---
+  monthlyIncome: { type: Number, default: null },
+  employmentStatus: { type: String, default: null },
+  
+  // Documents du locataire pour sa candidature
+  documents: [{
+    name: String, // ex: "Pièce d'identité"
+    url: String,  // Chemin vers le fichier
+    type: String  // PDF, PNG, etc.
+  }],
+  // -----------------------------------------------
+
   isVerified: { type: Boolean, default: false }, 
   verificationToken: String,
   resetPasswordToken: String,

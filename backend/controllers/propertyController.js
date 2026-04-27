@@ -315,7 +315,11 @@ exports.toggleFavorite = async (req, res) => {
 
 exports.getFavoriteProperties = async (req, res) => {
   try {
-    const favorites = await Property.find({ favorites: req.user.id });
+    // Récupérer les favoris de l'utilisateur avec détails de l'owner
+    const favorites = await Property.find({ favorites: req.user.id })
+      .populate('owner', 'fullName email phone')
+      .sort({ createdAt: -1 });
+    
     res.status(200).json({ success: true, data: favorites });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

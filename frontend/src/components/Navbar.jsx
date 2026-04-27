@@ -75,7 +75,7 @@ const Navbar = () => {
           key="tenant-dashboard"
           onClick={handleClose} 
           component={Link} 
-          to="/dashboard/profile"
+          to="/dashboard"
           sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
         >
           <DashboardIcon sx={{ fontSize: 18, mr: 1.5, color: '#00BCD4' }} />
@@ -216,7 +216,7 @@ const Navbar = () => {
             </Button>
             <Button 
               component={Link} 
-              to="/" 
+              to="/properties" 
               sx={{ 
                 color: '#0a1930',
                 fontSize: '15px', 
@@ -231,7 +231,7 @@ const Navbar = () => {
                   right: 0,
                   height: '2px',
                   background: '#0a1930',
-                  transform: location.pathname === '/' ? 'scaleX(1)' : 'scaleX(0)',
+                  transform: location.pathname === '/properties' ? 'scaleX(1)' : 'scaleX(0)',
                   transition: 'transform 0.3s ease',
                 },
                 '&:hover::after': {
