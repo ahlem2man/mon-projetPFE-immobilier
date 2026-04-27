@@ -7,6 +7,7 @@ import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import API_BASE_URL from '../../config/api';
 
 const AgencyReviews = () => {
   const { user } = useContext(AuthContext);
@@ -18,7 +19,7 @@ const AgencyReviews = () => {
     const fetchAgencyData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/agency/me', {
+        const res = await axios.get(`${API_BASE_URL}/agency/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setAgencyData(res.data);

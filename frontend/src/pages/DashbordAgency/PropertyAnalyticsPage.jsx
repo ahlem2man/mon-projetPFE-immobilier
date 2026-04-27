@@ -10,6 +10,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 
 const PropertyAnalyticsPage = () => {
   const { id } = useParams();
@@ -24,7 +25,7 @@ const PropertyAnalyticsPage = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `http://localhost:5000/api/properties/analytics/${id}`,
+          `${API_BASE_URL}/properties/analytics/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setAnalytics(res.data.data);

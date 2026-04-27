@@ -6,6 +6,7 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
+import API_BASE_URL from '../../config/api';
 
 const AgencyVerificationSection = () => {
   const { user } = useContext(AuthContext);
@@ -33,7 +34,7 @@ const AgencyVerificationSection = () => {
     formData.append('docType', docType);
 
     try {
-      await axios.post('http://localhost:5000/api/agency/upload-docs', 
+      await axios.post(`${API_BASE_URL}/agency/upload-docs`, 
         formData,
         { 
           headers: { 

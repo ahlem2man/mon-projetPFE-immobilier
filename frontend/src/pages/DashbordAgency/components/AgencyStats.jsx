@@ -10,6 +10,7 @@ import ViewIcon from '@mui/icons-material/Visibility';
 import RequestIcon from '@mui/icons-material/Assignment';
 import RatingIcon from '@mui/icons-material/Star';
 import { AuthContext } from '../../../context/AuthContext';
+import API_BASE_URL from '../../../config/api';
 
 const AgencyStats = () => {
   const { user } = useContext(AuthContext);
@@ -22,7 +23,7 @@ const AgencyStats = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/agency/me', {
+        const res = await axios.get(`${API_BASE_URL}/agency/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

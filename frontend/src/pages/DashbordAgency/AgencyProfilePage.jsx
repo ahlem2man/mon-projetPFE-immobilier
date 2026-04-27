@@ -7,7 +7,8 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
-import { buildImageUrl } from '../../utils/imageUrl'; 
+import { buildImageUrl } from '../../utils/imageUrl';
+import API_BASE_URL from '../../config/api'; 
 
 const AgencyProfilePage = () => {
   const { user } = useContext(AuthContext);
@@ -32,7 +33,7 @@ const AgencyProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/agency/me', {
+        const res = await axios.get(`${API_BASE_URL}/agency/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         // On fusionne les données reçues avec l'état initial pour éviter les champs undefined
@@ -70,7 +71,7 @@ const AgencyProfilePage = () => {
     logoFormData.append('logo', logoFile);
     
     try {
-      const res = await axios.post('http://localhost:5000/api/agency/upload-logo', 
+      const res = await axios.post(`${API_BASE_URL}/agency/upload-logo`, 
         logoFormData,
         {
           headers: { 
@@ -103,7 +104,7 @@ const AgencyProfilePage = () => {
     }
     
     try {
-      await axios.put('http://localhost:5000/api/agency/me', formData, {
+      await axios.put(`${API_BASE_URL}/agency/me`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

@@ -9,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { buildImageUrl } from '../../utils/imageUrl';
 import { AMENITIES_OPTIONS } from '../../config/constants';
+import API_BASE_URL from '../../config/api';
 
 const steps = ['Général', 'Caractéristiques', 'Photos & Statut'];
 
@@ -40,7 +41,7 @@ const PropertyEditPage = () => {
   useEffect(() => {
     const fetchProperty = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/properties/${id}`, {
+        const res = await axios.get(`${API_BASE_URL}/properties/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const property = res.data.data;
@@ -136,7 +137,7 @@ const PropertyEditPage = () => {
 
     setLoading(true);
     try {
-      await axios.patch(`http://localhost:5000/api/properties/${id}`, data, {
+      await axios.patch(`${API_BASE_URL}/properties/${id}`, data, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

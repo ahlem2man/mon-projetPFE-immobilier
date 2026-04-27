@@ -12,6 +12,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import axios from 'axios';
 import { buildImageUrl } from '../../utils/imageUrl';
+import API_BASE_URL from '../../config/api';
 
 const PropertiesList = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const PropertiesList = () => {
 
   const fetchProperties = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/properties/mine/list', {
+      const res = await axios.get(`${API_BASE_URL}/properties/mine/list`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProperties(res.data.data);
@@ -37,7 +38,7 @@ const PropertiesList = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await axios.patch(`http://localhost:5000/api/properties/${id}/status`, 
+      await axios.patch(`${API_BASE_URL}/properties/${id}/status`, 
         { status: newStatus }, 
         { headers: { Authorization: `Bearer ${token}` }}
       );
@@ -54,7 +55,7 @@ const PropertiesList = () => {
   const handleDuplicate = async (id) => {
     if (window.confirm("Dupliquer cette annonce ?")) {
       try {
-        await axios.post(`http://localhost:5000/api/properties/${id}/duplicate`, {}, {
+        await axios.post(`${API_BASE_URL}/properties/${id}/duplicate`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         fetchProperties();
@@ -67,7 +68,7 @@ const PropertiesList = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Supprimer cette annonce ?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/properties/${id}`, {
+        await axios.delete(`${API_BASE_URL}/properties/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setProperties(properties.filter(p => p._id !== id));
@@ -87,7 +88,7 @@ const PropertiesList = () => {
 
     if (window.confirm(`Supprimer ${selected.length} annonce(s) ? Cette action est irréversible.`)) {
       try {
-        await axios.post(`http://localhost:5000/api/properties/bulk-delete`, 
+        await axios.post(`${API_BASE_URL}/properties/bulk-delete`, 
           { ids: selected }, 
           { headers: { Authorization: `Bearer ${token}` }}
         );

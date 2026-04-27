@@ -10,6 +10,7 @@ import EuroIcon from '@mui/icons-material/Euro';
 import HistoryIcon from '@mui/icons-material/History';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 
 const ApplicationDetail = () => {
   const { id } = useParams();
@@ -25,7 +26,7 @@ const ApplicationDetail = () => {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/requests/${id}`, {
+        const res = await axios.get(`${API_BASE_URL}/requests/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         console.log("✅ Candidature chargée:", res.data);
@@ -50,7 +51,7 @@ const ApplicationDetail = () => {
     try {
       setActionLoading(true);
       // Envoyer la note SANS changer de statut (on ne passe pas 'status')
-      await axios.patch(`http://localhost:5000/api/requests/${id}`, 
+      await axios.patch(`${API_BASE_URL}/requests/${id}`, 
         { 
           internalNote: note  // SEULEMENT la note, pas de changement de statut
         },
@@ -58,11 +59,33 @@ const ApplicationDetail = () => {
       );
       alert('✅ Note enregistrée !');
       // Recharger les données
-      const res = await axios.get(`http://localhost:5000/api/requests/${id}`, {
+      const res = await axios.get(`${API_BASE_URL}/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setApp(res.data.data);
       setNote(''); // Vider le champ
+    } catch (err) {
+      console.error("❌ Erreur:", err);
+      alert("Erreur: " + (err.response?.data?.message || err.message));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Point 7 : Changer le statut de la candidature
+  const handleAction = async (newStatus) => {
+    try {
+      setActionLoading(true);
+      await axios.patch(`${API_BASE_URL}/requests/${id}`, 
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      alert(`✅ Statut changé en: ${newStatus}`);
+      // Recharger les données
+      const res = await axios.get(`${API_BASE_URL}/requests/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApp(res.data.data);
     } catch (err) {
       console.error("❌ Erreur:", err);
       alert("Erreur: " + (err.response?.data?.message || err.message));
@@ -109,7 +132,7 @@ const ApplicationDetail = () => {
               <List>
                 {app.documents.map((doc, index) => {
                   // ✨ Corriger le chemin URL en ajoutant le slash s'il manque
-                  const docUrl = doc.url.startsWith('/') ? `http://localhost:5000${doc.url}` : `http://localhost:5000/${doc.url}`;
+                  const docUrl = doc.url.startsWith('/') ? `${API_BASE_URL}${doc.url}` : `${API_BASE_URL}/${doc.url}`;
                   return (
                     <ListItem 
                       key={index} 
