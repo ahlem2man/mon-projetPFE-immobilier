@@ -80,6 +80,15 @@ const propertySchema = new mongoose.Schema({
       default: 10.1815 
     }
   },
+  // --- SPRINT 10 : Modération des annonces ---
+  moderationStatus: {
+    type: String,
+    enum: ['en attente', 'validé', 'rejeté'],
+    default: 'en attente'
+  },
+  adminNotes: { type: String, default: null },
+  isReported: { type: Boolean, default: false },
+  reportReasons: [String], // ['Contenu inapproprié', 'Faux prix', 'Photos trompeuses', etc.]
 }, { 
   timestamps: true 
 }

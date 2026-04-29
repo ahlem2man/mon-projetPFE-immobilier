@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Box, Drawer, AppBar, Toolbar, List, Typography, Divider, 
@@ -14,6 +14,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import axios from 'axios';
+import API_BASE_URL from '../../config/api';
 
 const drawerWidth = 260;
 
@@ -21,8 +23,30 @@ const AgencyDashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Simulation du statut (on le récupérera via l'API plus tard)
-  const [isVerified] = useState(false); 
+  const [isVerified, setIsVerified] = useState(false);
+
+  // Charger le statut de vérification de l'agence
+  useEffect(() => {
+    const fetchAgencyStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_BASE_URL}/agency/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // Utiliser isVerifiedByAdmin si disponible, sinon vérifier isVerified
+        if (response.data && response.data.isVerifiedByAdmin !== undefined) {
+          setIsVerified(response.data.isVerifiedByAdmin);
+        } else if (response.data && response.data.verificationStatus === 'approved') {
+          setIsVerified(true);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du statut d\'agence:', error);
+        setIsVerified(false);
+      }
+    };
+
+    fetchAgencyStatus();
+  }, []); 
 
   const menuItems = [
     { text: 'Vue d\'ensemble', icon: <DashboardIcon />, path: '/agency/dashboard' },

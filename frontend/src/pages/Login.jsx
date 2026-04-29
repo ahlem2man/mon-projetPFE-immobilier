@@ -28,9 +28,20 @@ const Login = () => {
     setError('');
     
     try {
-      await login(formData.email, formData.password);
+      const data = await login(formData.email, formData.password);
       setLoading(false);
-      navigate('/'); 
+      
+      // Redirection selon le rôle de l'utilisateur
+      const userRole = data.user.role;
+      if (userRole === 'admin' || userRole === 'superadmin') {
+        navigate('/dashboard-admin');
+      } else if (userRole === 'agency') {
+        navigate('/agency');
+      } else if (userRole === 'tenant') {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setLoading(false);
       setError(err.response?.data?.message || 'Identifiants invalides');

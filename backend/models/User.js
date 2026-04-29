@@ -34,7 +34,10 @@ const userSchema = new mongoose.Schema({
   }],
   // -----------------------------------------------
 
-  isVerified: { type: Boolean, default: false }, 
+  isVerified: { type: Boolean, default: false },
+  // --- SPRINT 10 : Modération des utilisateurs ---
+  isSuspended: { type: Boolean, default: false },
+  suspensionReason: { type: String, default: null },
   verificationToken: String,
   resetPasswordToken: String,
   resetPasswordExpires: Date

@@ -106,6 +106,23 @@ exports.submitRequest = async (req, res) => {
     // Récupérer le document créé
     const newRequest = await Request.findById(result.insertedId);
 
+    //  Notifier l'agence/propriétaire qu'une nouvelle candidature a été soumise
+    try {
+      const Tenant = require('../models/Tenant');
+      const tenant = await Tenant.findOne({ userId: tenantId });
+      const tenantName = tenant?.firstName || 'Un locataire';
+      
+      await createNotification(
+        property.owner,
+        `Nouvelle candidature de ${tenantName} pour le bien "${property.title}"`,
+        `/agency/applications`,
+        'new_message'
+      );
+    } catch (notifError) {
+      console.error('Erreur lors de la création de notification pour l\'agence:', notifError.message);
+      // Ne pas bloquer la création de la candidature si la notification échoue
+    }
+
     res.status(201).json({
       success: true,
       message: "Votre candidature a été transmise avec succès !",
@@ -239,6 +256,30 @@ exports.updateRequestStatus = async (req, res) => {
     );
 
     console.log('✅✅✅ UPDATE OK ✅✅✅');
+    
+    // 📢 Notifier le locataire si le statut a changé
+    if (status) {
+      try {
+        const statusMessages = {
+          'Acceptée': 'Félicitations! Votre candidature a été acceptée!',
+          'Rejetée': 'Votre candidature a été rejetée',
+          'Considérée': 'Votre candidature est en cours de considération',
+          'En attente': 'Votre candidature a été mise à jour'
+        };
+
+        const message = statusMessages[status] || `Votre candidature a changé de statut: ${status}`;
+        
+        await createNotification(
+          request.tenantId,
+          message,
+          `/dashboard/applications/${id}`,
+          'status_change'
+        );
+      } catch (notifError) {
+        console.error('Erreur lors de la création de notification pour le locataire:', notifError.message);
+        // Ne pas bloquer la mise à jour si la notification échoue
+      }
+    }
     
     res.status(200).json({
       success: true,

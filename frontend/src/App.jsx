@@ -44,6 +44,11 @@ import ApplicationDetail from './pages/DashbordAgency/ApplicationDetail';
 import PropertyAnalyticsPage from './pages/DashbordAgency/PropertyAnalyticsPage';
 import GlobalAnalyticsPage from './pages/Dashboard/GlobalAnalyticsPage';
 import DashboardHomePage from './pages/Dashboard/DashboardHomePage';
+import AdminDashboardLayout from './pages/DashboardAdmin/AdminDashboardLayout';
+import AdminDashboard from './pages/DashboardAdmin/AdminDashboard';
+import AdminUsersList from './pages/DashboardAdmin/AdminUsersList';
+import AdminPropertiesModeration from './pages/DashboardAdmin/AdminPropertiesModeration';
+import AdminVerification from './pages/DashboardAdmin/AdminVerification';
 
 function App() {
   return (
@@ -120,6 +125,21 @@ function App() {
                   <Route path="properties/add" element={<AddPropertyStepper />} />
                   <Route path="properties/:id/edit" element={<PropertyEditPage />} />
                   <Route path="properties/:id/analytics" element={<PropertyAnalyticsPage />} />
+                </Route>
+
+                {/* Dashboard Admin */}
+                <Route 
+                  path="/dashboard-admin" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
+                      <AdminDashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<AdminUsersList />} />
+                  <Route path="verification" element={<AdminVerification />} />
+                  <Route path="properties" element={<AdminPropertiesModeration />} />
                 </Route>
               </Routes>
             </Box>

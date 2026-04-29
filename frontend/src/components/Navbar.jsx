@@ -36,7 +36,40 @@ const Navbar = () => {
 
   // Helper function to return menu items as array to avoid Fragment error in MUI Menu
   const getMenuItems = () => {
-    if (user.role === 'agency') {
+    if (user.role === 'admin' || user.role === 'superadmin') {
+      return [
+        <MenuItem 
+          key="admin-menu"
+          onClick={handleClose} 
+          component={Link} 
+          to="/dashboard-admin"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <DashboardIcon sx={{ fontSize: 18, mr: 1.5, color: '#1A237E' }} />
+          Mon Espace Admin
+        </MenuItem>,
+        <MenuItem 
+          key="admin-users"
+          onClick={handleClose} 
+          component={Link} 
+          to="/dashboard-admin/users"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <AssignmentIcon sx={{ fontSize: 18, mr: 1.5, color: '#3F51B5' }} />
+          Gestion Utilisateurs
+        </MenuItem>,
+        <MenuItem 
+          key="admin-properties"
+          onClick={handleClose} 
+          component={Link} 
+          to="/dashboard-admin/properties"
+          sx={{ py: 1.2, '&:hover': { backgroundColor: '#f5f5f5' } }}
+        >
+          <AssignmentIcon sx={{ fontSize: 18, mr: 1.5, color: '#5C6BC0' }} />
+          Modération Annonces
+        </MenuItem>
+      ];
+    } else if (user.role === 'agency') {
       return [
         <MenuItem 
           key="agency-menu"
@@ -318,7 +351,11 @@ const Navbar = () => {
               >
                 <Box sx={{ px: 2, py: 1.5 }}>
                   <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#0a1930' }}>
-                    Mon Compte
+                    {user.role === 'admin' || user.role === 'superadmin' 
+                      ? 'Mon Espace Admin' 
+                      : user.role === 'agency' 
+                      ? 'Mon Espace Agence' 
+                      : 'Mon Espace Locataire'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {user.email}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   IconButton,
@@ -18,6 +19,7 @@ import axios from 'axios';
 import API_BASE_URL from '../config/api';
 
 export default function NotificationPanel() {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -73,7 +75,10 @@ export default function NotificationPanel() {
   const handleNotificationClick = (notification) => {
     handleMarkAsRead(notification._id);
     if (notification.link) {
-      window.location.href = notification.link;
+      // Fermer le popover avant de naviguer
+      handleClose();
+      // Utiliser React Router au lieu de window.location.href
+      navigate(notification.link);
     }
   };
 
