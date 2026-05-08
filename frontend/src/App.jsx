@@ -49,6 +49,10 @@ import AdminDashboard from './pages/DashboardAdmin/AdminDashboard';
 import AdminUsersList from './pages/DashboardAdmin/AdminUsersList';
 import AdminPropertiesModeration from './pages/DashboardAdmin/AdminPropertiesModeration';
 import AdminVerification from './pages/DashboardAdmin/AdminVerification';
+import DocumentVerification from './pages/DashboardAdmin/DocumentVerification';
+import PaymentHistory from './pages/DashboardAdmin/PaymentHistory';
+import ActivityLogs from './pages/DashboardAdmin/ActivityLogs';
+import PaymentsList from './pages/DashboardAdmin/PaymentsList';
 
 function App() {
   return (
@@ -140,6 +144,10 @@ function App() {
                   <Route path="users" element={<AdminUsersList />} />
                   <Route path="verification" element={<AdminVerification />} />
                   <Route path="properties" element={<AdminPropertiesModeration />} />
+                  <Route path="documents" element={<DocumentVerification />} />
+                  <Route path="payments" element={<PaymentsList />} />
+                  <Route path="history" element={<PaymentHistory />} />
+                  <Route path="logs" element={<ActivityLogs />} />
                 </Route>
               </Routes>
             </Box>

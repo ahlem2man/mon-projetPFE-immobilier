@@ -9,6 +9,9 @@ exports.getAllProperties = async (req, res) => {
   try {
     let query = {};
 
+    // ✅ FILTRE DE MODÉRATION - Seules les annonces validées sont visibles
+    query.moderationStatus = 'validé';
+
     // Recherche par ville
     if (req.query.location) {
       query.location = { $regex: req.query.location, $options: 'i' };
@@ -73,6 +76,14 @@ exports.getPropertyById = async (req, res) => {
     const ViewLog = require('../models/ViewLog');
     const property = await Property.findById(req.params.id).populate('owner', 'fullName email');
     if (!property) return res.status(404).json({ success: false, message: "Annonce non trouvée" });
+
+    // ✅ SÉCURITÉ : Vérifier que l'annonce est validée (sauf si c'est l'owner ou admin)
+    const isOwner = property.owner._id.toString() === req.user?.id;
+    const isAdmin = req.user?.role === 'admin';
+    
+    if (property.moderationStatus !== 'validé' && !isOwner && !isAdmin) {
+      return res.status(403).json({ success: false, message: "Cette annonce n'est pas disponible" });
+    }
     
     // Logique Analytics : 1 vue par utilisateur par jour
     const todayStart = new Date();
@@ -126,7 +137,8 @@ exports.getPropertyById = async (req, res) => {
 // @desc    Créer une propriété (Lien automatique avec l'agence)
 exports.createProperty = async (req, res) => {
   try {
-    // Si tu utilises Multer, req.files contient les chemins des images
+    // ✅ Si tu utilises Multer, req.files contient les chemins des images
+    // Les fichiers sont stockés dans uploads/properties/ via uploadMiddleware
     const imagePaths = req.files ? req.files.map(f => `/uploads/properties/${f.filename}`) : req.body.images;
 
     // Parse amenities - peut arriver en JSON string ou string normale

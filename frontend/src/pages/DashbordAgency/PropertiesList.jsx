@@ -10,6 +10,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import axios from 'axios';
 import { buildImageUrl } from '../../utils/imageUrl';
 import API_BASE_URL from '../../config/api';
@@ -209,9 +211,15 @@ const PropertiesList = () => {
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <Box>
-                    <Typography variant="caption" display="block">👁️ <b>{prop.views || 0}</b> vues</Typography>
-                    <Typography variant="caption" display="block">❤️ <b>{prop.favorites?.length || 0}</b> favoris</Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <VisibilityIcon sx={{ fontSize: '1rem' }} />
+                      <Typography variant="caption"><b>{prop.views || 0}</b> vues</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <FavoriteIcon sx={{ fontSize: '1rem', color: '#e91e63' }} />
+                      <Typography variant="caption"><b>{prop.favorites?.length || 0}</b> favoris</Typography>
+                    </Box>
                   </Box>
                 </TableCell>
                 <TableCell align="right">

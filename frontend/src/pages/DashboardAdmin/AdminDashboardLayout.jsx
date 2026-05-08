@@ -11,6 +11,10 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ErrorIcon from '@mui/icons-material/Error';
+import PaymentIcon from '@mui/icons-material/Payment';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import HistoryIcon from '@mui/icons-material/History';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const drawerWidth = 260;
 
@@ -24,6 +28,10 @@ const AdminDashboardLayout = () => {
     { text: 'Gestion Utilisateurs', icon: <PeopleIcon />, path: '/dashboard-admin/users' },
     { text: 'Vérification Comptes', icon: <GavelIcon />, path: '/dashboard-admin/verification' },
     { text: 'Modération Annonces', icon: <HomeWorkIcon />, path: '/dashboard-admin/properties' },
+    { text: 'Vérification Documents', icon: <VerifiedUserIcon />, path: '/dashboard-admin/documents' },
+    { text: 'Paiements', icon: <PaymentIcon />, path: '/dashboard-admin/payments' },
+    { text: 'Historique Paiements', icon: <HistoryIcon />, path: '/dashboard-admin/history' },
+    { text: 'Journal d\'Activité', icon: <AssignmentIcon />, path: '/dashboard-admin/logs' },
     { text: 'Signalements', icon: <ErrorIcon />, path: '/dashboard-admin/reports' },
     { text: 'Paramètres', icon: <SettingsIcon />, path: '/dashboard-admin/settings' },
   ];

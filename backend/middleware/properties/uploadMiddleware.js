@@ -2,10 +2,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Créer le dossier s'il n'existe pas
-const uploadDir = 'uploads/properties/';
+// ✅ Créer le dossier s'il n'existe pas (avec chemin ABSOLU)
+const uploadDir = path.join(__dirname, '../../uploads/properties/');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('✅ Dossier d\'upload créé:', uploadDir);
 }
 
 const storage = multer.diskStorage({

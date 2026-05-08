@@ -9,6 +9,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import axios from 'axios';
+import { buildImageUrl } from '../../utils/imageUrl';
 
 const AdminPropertiesModeration = () => {
   const [properties, setProperties] = useState([]);
@@ -162,7 +163,7 @@ const AdminPropertiesModeration = () => {
               >
                 {prop.images?.[0] ? (
                   <img
-                    src={prop.images[0]}
+                    src={buildImageUrl(prop.images[0])}
                     alt={prop.title}
                     style={{
                       width: '100%',

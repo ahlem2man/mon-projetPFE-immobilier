@@ -13,9 +13,9 @@ export const buildImageUrl = (imagePath) => {
     return imagePath;
   }
 
-  // Extraire le domaine de base (sans /api)
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const baseUrl = apiBase.replace('/api', ''); // Retirer /api pour les fichiers statiques
+  // ✅ Extraire le domaine de base (sans /api) - même logique que api.js
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const baseUrl = apiBase.endsWith('/api') ? apiBase.replace('/api', '') : apiBase;
   
   return `${baseUrl}${imagePath}`;
 };

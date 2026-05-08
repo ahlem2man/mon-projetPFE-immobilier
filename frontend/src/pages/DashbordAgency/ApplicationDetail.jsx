@@ -9,6 +9,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import EuroIcon from '@mui/icons-material/Euro';
 import HistoryIcon from '@mui/icons-material/History';
 import TimelineIcon from '@mui/icons-material/Timeline';
+import WarningIcon from '@mui/icons-material/Warning';
+import BusinessIcon from '@mui/icons-material/Business';
+import NoteIcon from '@mui/icons-material/Note';
+import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
 import API_BASE_URL from '../../config/api';
 
@@ -127,7 +131,9 @@ const ApplicationDetail = () => {
 
           {/* Point 6 : Visualiseur de Documents */}
           <Paper sx={{ p: 3, borderRadius: 3 }}>
-            <Typography variant="h6" gutterBottom>📄 Pièces Justificatives</Typography>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DescriptionIcon /> Pièces Justificatives
+            </Typography>
             {app.documents && app.documents.length > 0 ? (
               <List>
                 {app.documents.map((doc, index) => {
@@ -150,9 +156,10 @@ const ApplicationDetail = () => {
                 })}
               </List>
             ) : (
-              <Box sx={{ p: 2, bgcolor: '#fff3cd', borderRadius: 2, border: '1px solid #ffc107' }}>
+              <Box sx={{ p: 2, bgcolor: '#fff3cd', borderRadius: 2, border: '1px solid #ffc107', display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                <WarningIcon sx={{ color: '#856404', mt: 0.5, flexShrink: 0 }} />
                 <Typography variant="body2" color="warning.dark">
-                  ⚠️ Aucune pièce justificative fournie par le locataire
+                  Aucune pièce justificative fournie par le locataire
                 </Typography>
                 <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                   Cliquez sur "Demander plus d'infos" pour demander les documents nécessaires
@@ -163,7 +170,9 @@ const ApplicationDetail = () => {
 
           {/* Informations d'emploi du locataire */}
           <Paper sx={{ p: 3, borderRadius: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>💼 Situation Professionnelle</Typography>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <BusinessIcon /> Situation Professionnelle
+            </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 150 }}>Statut emploi:</Typography>
               <Chip 
@@ -244,7 +253,9 @@ const ApplicationDetail = () => {
 
           {/* Point 8 : Notes Internes - AVEC HISTORIQUE */}
           <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>📝 Notes de l'agence (privé)</Typography>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <NoteIcon /> Notes de l'agence (privé)
+            </Typography>
             
             {/* Historique des notes */}
             {app.internalNotes && app.internalNotes.length > 0 && (
@@ -287,16 +298,17 @@ const ApplicationDetail = () => {
               sx={{ mb: 2 }}
             />
             
-            {/* 🆕 Bouton pour envoyer la note SEULE */}
+            {/* Bouton pour envoyer la note SEULE */}
             <Button 
               fullWidth 
               variant="contained" 
               color="info"
+              startIcon={<SaveIcon />}
               onClick={handleAddNote}
               disabled={actionLoading || !note.trim()}
               sx={{ mb: 2, textTransform: 'none' }}
             >
-              💾 Enregistrer cette note
+              Enregistrer cette note
             </Button>
             
             <Divider sx={{ mb: 2 }} />

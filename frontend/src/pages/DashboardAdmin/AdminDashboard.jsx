@@ -1,55 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Box, Grid, Paper, Typography, Card, CardContent, LinearProgress
+  Box, Grid, Paper, Typography, Card, CardContent, CircularProgress 
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import ErrorIcon from '@mui/icons-material/Error';
+import EuroIcon from '@mui/icons-material/Euro'; 
 import axios from 'axios';
 
+// --- AJOUT ÉTAPE 5 : IMPORT RECHARTS ---
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
+
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalProperties: 0,
-    pendingProperties: 0,
-    reportedProperties: 0
-  });
+  const [stats, setStats] = useState(null);
+  // --- AJOUT ÉTAPE 5 : ÉTAT POUR LES DONNÉES DE CROISSANCE ---
+  const [growthData, setGrowthData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [token] = useState(localStorage.getItem('token'));
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchAllDashboardData = async () => {
       try {
         setLoading(true);
-        const [usersRes, propertiesRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/admin/users', {
+        
+        // --- MODIFICATION ÉTAPE 5 : APPEL SIMULTANÉ DES STATS GLOBALES ET DE CROISSANCE ---
+        const [globalRes, growthRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/admin/stats/global', {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:5000/api/admin/properties/pending', {
+          axios.get('http://localhost:5000/api/admin/stats/growth', {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
 
-        const users = usersRes.data.data || [];
-        const properties = propertiesRes.data.data || [];
+        setStats(globalRes.data.data);
         
-        const pending = properties.filter(p => p.moderationStatus === 'en attente').length;
-        const reported = properties.filter(p => p.isReported).length;
+        // Formatage des mois pour le graphique (ex: 1 -> Jan)
+        const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+        const formattedGrowth = growthRes.data.data.map(item => ({
+          name: monthNames[item._id - 1] || `Mois ${item._id}`,
+          utilisateurs: item.count
+        }));
+        setGrowthData(formattedGrowth);
 
-        setStats({
-          totalUsers: users.length,
-          totalProperties: users.length, // Placeholder
-          pendingProperties: pending,
-          reportedProperties: reported
-        });
       } catch (err) {
-        console.error('Erreur lors du chargement des stats:', err);
+        console.error('Erreur lors du chargement du dashboard:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
+    fetchAllDashboardData();
   }, [token]);
 
   const StatCard = ({ icon, title, value, color, subtext }) => (
@@ -68,13 +71,11 @@ const AdminDashboard = () => {
               {title}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 'bold', color: color, mt: 1 }}>
-              {loading ? '-' : value}
+              {value}
             </Typography>
-            {subtext && (
-              <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
-                {subtext}
-              </Typography>
-            )}
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+              {subtext}
+            </Typography>
           </Box>
           <Box sx={{ fontSize: '3rem', color: color, opacity: 0.2 }}>
             {icon}
@@ -84,53 +85,91 @@ const AdminDashboard = () => {
     </Card>
   );
 
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
+
   return (
-    <Box>
+    <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3, color: '#1A237E' }}>
-        Vue d'ensemble
+        Vue d'ensemble Analytics
       </Typography>
 
-      {/* Grille des Stats */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            icon={<EuroIcon />}
+            title="Revenus"
+            value={`${stats?.revenue?.total || 0} €`}
+            color="#2E7D32"
+            subtext="Chiffre d'affaires total"
+          />
+        </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             icon={<PeopleIcon />}
             title="Utilisateurs"
-            value={stats.totalUsers}
+            value={stats?.users?.total || 0}
             color="#3F51B5"
-            subtext="Utilisateurs actifs"
+            subtext={`${stats?.users?.agencies || 0} agences actives`}
           />
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             icon={<HomeWorkIcon />}
             title="Annonces"
-            value={stats.totalProperties}
+            value={stats?.properties?.total || 0}
             color="#009688"
-            subtext="Total des annonces"
+            subtext={`${stats?.properties?.active || 0} en ligne`}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            icon={<HomeWorkIcon />}
-            title="En Attente"
-            value={stats.pendingProperties}
-            color="#FF9800"
-            subtext="Nécessitent modération"
-          />
-        </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             icon={<ErrorIcon />}
-            title="Signalements"
-            value={stats.reportedProperties}
+            title="Demandes"
+            value={stats?.applications?.total || 0}
             color="#F44336"
-            subtext="Annonces signalées"
+            subtext="Candidatures locataires"
           />
         </Grid>
       </Grid>
 
-      {/* Section d'aide */}
+      {/* --- AJOUT ÉTAPE 5 : GRAPHIQUE DE CROISSANCE --- */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid rgba(0, 0, 0, 0.08)' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+              Croissance des Inscriptions (Mensuel)
+            </Typography>
+            <Box sx={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={growthData}>
+                  <defs>
+                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3F51B5" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3F51B5" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area 
+                    type="monotone" 
+                    dataKey="utilisateurs" 
+                    stroke="#3F51B5" 
+                    fillOpacity={1} 
+                    fill="url(#colorUsers)" 
+                    strokeWidth={3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
       <Paper 
         sx={{ 
           p: 3, 
@@ -140,11 +179,10 @@ const AdminDashboard = () => {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#1A237E' }}>
-          Bienvenue sur votre Console d'Administration
+          Console de Monitoring
         </Typography>
         <Typography variant="body2" color="textSecondary">
-          À partir du menu latéral, vous pouvez gérer les utilisateurs, modérer les annonces et surveiller les signalements. 
-          Utilisez les onglets pour naviguer entre les différentes sections.
+          Les données et graphiques sont synchronisés avec les modèles User, Property et Payment.
         </Typography>
       </Paper>
     </Box>

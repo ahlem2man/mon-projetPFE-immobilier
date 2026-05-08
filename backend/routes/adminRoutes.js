@@ -10,15 +10,22 @@ const {
   bulkAction,
   getPendingProperties, 
   moderateProperty,
-  getPropertyDetail
+  getPropertyDetail,
+  getPendingDocuments,
+  verifyDocument,
+  getGlobalStats,
+  getGrowthStats
 } = require('../controllers/adminController');
-
-
 
 // Import des contrôleurs paiements
 const { getAdminPayments, getRevenueStats } = require('../controllers/paymentController');
 
-const { getPendingDocuments, verifyDocument } = require('../controllers/adminController');
+// Import des contrôleurs logs d'activité
+const { 
+  getActivityLogs, 
+  getAdminActivityReport, 
+  exportActivityLogsCSV 
+} = require('../controllers/activityLogController');
 // Toutes les routes ici nécessitent d'être connecté ET d'être admin
 router.use(protect);
 router.use(restrictTo('admin', 'superadmin'));
@@ -46,4 +53,14 @@ router.get('/payments/stats', getRevenueStats); // Pour les graphiques analytics
 // --- ROUTES Documents (Sprint 11 - Étape 2) ---
 router.get('/documents/pending', getPendingDocuments);
 router.patch('/documents/:id/verify', verifyDocument);
+
+// --- ANALYTICS (Sprint 11 - Étape 3) ---
+router.get('/stats/global', getGlobalStats);
+router.get('/stats/growth', getGrowthStats);
+
+// --- AUDIT & ACTIVITY LOGS (Sprint 11 - Étape 4) ---
+router.get('/logs/activity', getActivityLogs);
+router.get('/logs/report', getAdminActivityReport);
+router.get('/logs/export-csv', exportActivityLogsCSV);
+
 module.exports = router;

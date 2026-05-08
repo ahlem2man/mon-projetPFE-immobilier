@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, IconButton, Snackbar, Alert } from '@mui/material'; 
+import { Button, IconButton, Snackbar, Alert, Box } from '@mui/material'; 
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import BedIcon from '@mui/icons-material/Bed';
+import SquareFootIcon from '@mui/icons-material/SquareFoot';
+import ApartmentIcon from '@mui/icons-material/Apartment';
 import axios from 'axios';
 import API_BASE_URL from '../config/api';
 import { AuthContext } from '../context/AuthContext';
@@ -81,7 +85,7 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
       setIsFav(newFavState);
       
       setSnackbarMessage(
-        newFavState ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris'
+        newFavState ? 'Ajouté aux favoris' : 'Retiré des favoris'
       );
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
@@ -147,13 +151,13 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
         <div className="property-content">
           <h3 className="property-title">{property.title}</h3>
           <p className="property-location">
-            <span>📍</span> {property.location}
+            <LocationOnIcon sx={{ fontSize: '1.2rem', marginRight: '0.5rem', color: '#00bcd4', verticalAlign: 'middle', display: 'inline' }} /> {property.location}
           </p>
           
           <div className="property-specs">
-            <div className="spec-item"><span>🛏️</span> {property.rooms} Ch</div>
-            <div className="spec-item"><span>📐</span> {property.surface} m²</div>
-            <div className="spec-item"><span>🏢</span> {property.type}</div>
+            <div className="spec-item"><BedIcon sx={{ fontSize: '1rem', marginRight: '0.3rem', verticalAlign: 'middle', display: 'inline' }} /> {property.rooms} Ch</div>
+            <div className="spec-item"><SquareFootIcon sx={{ fontSize: '1rem', marginRight: '0.3rem', verticalAlign: 'middle', display: 'inline' }} /> {property.surface} m²</div>
+            <div className="spec-item"><ApartmentIcon sx={{ fontSize: '1rem', marginRight: '0.3rem', verticalAlign: 'middle', display: 'inline' }} /> {property.type}</div>
           </div>
           
           <hr />

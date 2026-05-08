@@ -4,6 +4,9 @@ const Agency = require('../models/Agency');
 
 const Document = require('../models/Document');
 
+const Payment = require('../models/Payment');
+const Request = require('../models/Request'); // Pour les demandes
+
 
 // @desc    Obtenir tous les utilisateurs avec filtres (Point 2 & 5)
 exports.getUsers = async (req, res) => {
@@ -259,5 +262,91 @@ exports.verifyDocument = async (req, res) => {
     res.status(200).json({ success: true, data: doc });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
+  }
+};
+exports.getGlobalStats = async (req, res) => {
+  try {
+    // 1. Statistiques des Utilisateurs
+    const totalUsers = await User.countDocuments();
+    const tenantsCount = await User.countDocuments({ role: 'tenant' });
+    const agenciesCount = await User.countDocuments({ role: 'agency' });
+
+    // 2. Statistiques des Propriétés
+    const totalProperties = await Property.countDocuments();
+    const activeProperties = await Property.countDocuments({ moderationStatus: 'validé' });
+
+    // 3. Statistiques Financières (Revenus en Euros)
+    const revenueData = await Payment.aggregate([
+      { $match: { status: 'complété' } },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+    const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+    // 4. Statistiques des Demandes (Applications)
+    const totalApplications = await Request.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: { total: totalUsers, tenants: tenantsCount, agencies: agenciesCount },
+        properties: { total: totalProperties, active: activeProperties },
+        revenue: { total: totalRevenue, currency: 'EUR' },
+        applications: { total: totalApplications }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+exports.getGrowthStats = async (req, res) => {
+  try {
+    // Exemple : Évolution des inscriptions par mois
+    const userGrowth = await User.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    res.status(200).json({ success: true, data: userGrowth });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Obtenir la liste détaillée de tous les paiements
+exports.getAllPayments = async (req, res) => {
+  try {
+    const { status, startDate, endDate } = req.query;
+    let query = {};
+
+    // Filtre par statut (complété, en attente, échoué)
+    if (status) query.status = status;
+
+    // Filtre par plage de dates
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const payments = await Payment.find(query)
+      .populate('userId', 'name email role')
+      .sort('-createdAt');
+
+    // Calcul rapide des totaux pour le rapport
+    const report = {
+      totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
+      count: payments.length,
+      completedCount: payments.filter(p => p.status === 'complété').length
+    };
+
+    res.status(200).json({ success: true, report, data: payments });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };

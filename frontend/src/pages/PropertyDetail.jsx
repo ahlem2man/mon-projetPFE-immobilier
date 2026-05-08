@@ -118,7 +118,7 @@ const PropertyDetail = () => {
         setIsFav(newFavState);
         
         setSnackbarMessage(
-          newFavState ? '❤️ Ajouté aux favoris' : '💔 Retiré des favoris'
+          newFavState ? 'Ajouté aux favoris' : 'Retiré des favoris'
         );
         setSnackbarSeverity('success');
         setOpenSnackbar(true);
@@ -173,7 +173,7 @@ const PropertyDetail = () => {
                     '&:hover': { opacity: 1 }
                   }}
                 >
-                  <img src={img} alt="miniature" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={buildImageUrl(img)} alt="miniature" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </Box>
               ))}
             </Stack>
@@ -304,11 +304,9 @@ const PropertyDetail = () => {
 
      {/* SECTION CARTE */}
       <Box sx={{ mt: 6 }}>
-        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
-          📍 Localisation
-        </Typography>
-        
-        {/* Afficher la carte avec la localisation correcte de la ville */}
+        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <LocationOnIcon /> Localisation        </Typography>
+                {/* Afficher la carte avec la localisation correcte de la ville */}
         {property.coordinates || property.location ? (
           <PropertyMap 
             lat={property.coordinates?.lat} 

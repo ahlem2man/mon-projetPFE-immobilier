@@ -58,7 +58,7 @@ const FavoritesPage = () => {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1a237e', mb: 1 }}>
-          Mes Coups de Cœur ❤️
+          Mes Coups de Cœur
         </Typography>
         <Typography variant="body2" sx={{ color: '#666' }}>
           {favorites.length === 0 
@@ -87,7 +87,7 @@ const FavoritesPage = () => {
           border: '1px solid #ddd'
         }}>
           <Typography variant="h6" sx={{ mb: 2, color: '#666' }}>
-            📭 Aucun favori pour le moment
+            Aucun favori pour le moment
           </Typography>
           <Typography variant="body2" sx={{ color: '#999', mb: 3 }}>
             Explorez nos annonces et ajoutez vos propriétés préférées
