@@ -14,7 +14,7 @@ export default function DashboardLayout() {
   useEffect(() => {
     const fetchCompletion = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/tenant/me`, {
+        const res = await axios.get(`${API_BASE_URL}/tenants/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setCompletion(res.data?.completionPercentage || 0);

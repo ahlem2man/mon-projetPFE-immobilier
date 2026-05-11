@@ -57,7 +57,7 @@ const PropertyDetail = () => {
         }
 
         // ✨ Vérifier directement depuis Tenant pour être sûr
-        const tenantRes = await axios.get(`${API_BASE_URL}/tenant/me`, {
+        const tenantRes = await axios.get(`${API_BASE_URL}/tenants/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 

@@ -20,6 +20,7 @@ const ApplicationDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [app, setApp] = useState(null);
+  const [tenantProfile, setTenantProfile] = useState(null);
   const [note, setNote] = useState("");
   const [openDoc, setOpenDoc] = useState(null); // Pour le visualiseur
   const [loading, setLoading] = useState(true);
@@ -33,10 +34,23 @@ const ApplicationDetail = () => {
         const res = await axios.get(`${API_BASE_URL}/requests/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log("✅ Candidature chargée:", res.data);
+        console.log(" Candidature chargée:", res.data);
         setApp(res.data.data);
+        
+        // Récupérer aussi le profil du locataire pour ses documents
+        if (res.data.data.tenantId._id) {
+          try {
+            const tenantRes = await axios.get(`${API_BASE_URL}/tenants/profile/${res.data.data.tenantId._id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log(" Profil locataire chargé:", tenantRes.data);
+            setTenantProfile(tenantRes.data.data);
+          } catch (err) {
+            console.log(" Profil locataire non disponible", err.message);
+          }
+        }
       } catch (err) {
-        console.error("❌ Erreur fetch:", err);
+        console.error(" Erreur fetch:", err);
         alert("Erreur de chargement: " + (err.response?.data?.message || err.message));
       } finally {
         setLoading(false);
@@ -61,7 +75,7 @@ const ApplicationDetail = () => {
         },
         { headers: { Authorization: `Bearer ${token}` }}
       );
-      alert('✅ Note enregistrée !');
+      alert(' Note enregistrée !');
       // Recharger les données
       const res = await axios.get(`${API_BASE_URL}/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -69,7 +83,7 @@ const ApplicationDetail = () => {
       setApp(res.data.data);
       setNote(''); // Vider le champ
     } catch (err) {
-      console.error("❌ Erreur:", err);
+      console.error(" Erreur:", err);
       alert("Erreur: " + (err.response?.data?.message || err.message));
     } finally {
       setActionLoading(false);
@@ -84,14 +98,14 @@ const ApplicationDetail = () => {
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` }}
       );
-      alert(`✅ Statut changé en: ${newStatus}`);
+      alert(` Statut changé en: ${newStatus}`);
       // Recharger les données
       const res = await axios.get(`${API_BASE_URL}/requests/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setApp(res.data.data);
     } catch (err) {
-      console.error("❌ Erreur:", err);
+      console.error(" Erreur:", err);
       alert("Erreur: " + (err.response?.data?.message || err.message));
     } finally {
       setActionLoading(false);
@@ -134,17 +148,50 @@ const ApplicationDetail = () => {
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <DescriptionIcon /> Pièces Justificatives
             </Typography>
-            {app.documents && app.documents.length > 0 ? (
+            {tenantProfile?.documents && Object.keys(tenantProfile.documents).length > 0 ? (
+              <List>
+                {Object.entries(tenantProfile.documents).map(([key, filePath], index) => {
+                  if (!filePath) return null;
+                  const docNames = {
+                    identityCard: 'Pièce d\'identité',
+                    taxNotice: 'Avis d\'imposition',
+                    lastThreePayslips: 'Trois derniers bulletins de salaire',
+                    employmentContract: 'Contrat de travail',
+                    employerAttestation: 'Attestation employeur',
+                    rentalReceipts: 'Quittances de loyer',
+                    propertyTax: 'Taxe foncière',
+                    accommodationAttestation: 'Attestation d\'hébergement',
+                    utilityBill: 'Facture de domicile'
+                  };
+                  //  Normaliser les chemins Windows (\) en chemins URL (/)
+                  const normalizedPath = filePath.replace(/\\/g, '/');
+                  const docUrl = normalizedPath.startsWith('/') ? `http://localhost:5000${normalizedPath}` : `http://localhost:5000/${normalizedPath}`;
+                  return (
+                    <ListItem 
+                      key={index} 
+                      component="button"
+                      onClick={() => window.open(docUrl, '_blank')}
+                      sx={{ border: '1px solid #eee', borderRadius: 2, mb: 1, bgcolor: '#f5f5f5', cursor: 'pointer' }}
+                    >
+                      <ListItemIcon><DescriptionIcon color="primary" /></ListItemIcon>
+                      <ListItemText 
+                        primary={docNames[key] || key} 
+                        secondary="Cliquer pour prévisualiser" 
+                      />
+                    </ListItem>
+                  );
+                })}
+              </List>
+            ) : app.documents && app.documents.length > 0 ? (
               <List>
                 {app.documents.map((doc, index) => {
-                  // ✨ Corriger le chemin URL en ajoutant le slash s'il manque
                   const docUrl = doc.url.startsWith('/') ? `${API_BASE_URL}${doc.url}` : `${API_BASE_URL}/${doc.url}`;
                   return (
                     <ListItem 
                       key={index} 
-                      button 
-                      onClick={() => setOpenDoc(docUrl)}
-                      sx={{ border: '1px solid #eee', borderRadius: 2, mb: 1, bgcolor: '#f5f5f5' }}
+                      component="button"
+                      onClick={() => window.open(docUrl, '_blank')}
+                      sx={{ border: '1px solid #eee', borderRadius: 2, mb: 1, bgcolor: '#f5f5f5', cursor: 'pointer' }}
                     >
                       <ListItemIcon><DescriptionIcon color="primary" /></ListItemIcon>
                       <ListItemText 

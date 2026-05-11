@@ -43,6 +43,21 @@ const tenantSchema = new mongoose.Schema({
   // Pour l'indicateur de complétude (0 à 100)
   completionPercentage: { type: Number, default: 0 },
 
+  // Statut du dossier locatif pour l'agence
+  fileStatus: { 
+    type: String, 
+    enum: ['pending', 'verified', 'rejected', 'info_required'],
+    default: 'pending'
+  },
+
+  // Historique des actions et notes internes (par l'agence)
+  fileHistory: [{
+    status: { type: String, enum: ['pending', 'verified', 'rejected', 'info_required'] },
+    note: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    agencyId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  }],
+
   // Tableau des recherches mémorisées (Étape 9)
   savedSearches: [{
     label: { type: String }, // Ex: "T3 à Lyon"

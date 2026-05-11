@@ -53,7 +53,7 @@ const DocumentsPage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/tenant/me`, {
+        const res = await axios.get(`${API_BASE_URL}/tenants/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         if (res.data) {
@@ -127,7 +127,7 @@ const DocumentsPage = () => {
     if (documents[key].uploadedPath) {
       try {
         await axios.delete(
-          `${API_BASE_URL}/tenant/delete-doc/${key}`,
+          `${API_BASE_URL}/tenants/delete-doc/${key}`,
           {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           }
@@ -169,7 +169,7 @@ const DocumentsPage = () => {
       const token = localStorage.getItem('token');
 
       // ÉTAPE 1 : Envoyer les infos de profil (JSON)
-      await axios.put(`${API_BASE_URL}/tenant/profile`, {
+      await axios.put(`${API_BASE_URL}/tenants/profile`, {
         professionalStatus: applicantProfile.professionalStatus,
         hasGuarantee: applicantProfile.hasGuarantee,
         guaranteeDetails: applicantProfile.guaranteeDetails
@@ -196,7 +196,7 @@ const DocumentsPage = () => {
       // Si des documents à envoyer, les envoyer
       if (hasFilesToUpload) {
         const response = await axios.post(
-          `${API_BASE_URL}/tenant/upload-docs`, 
+          `${API_BASE_URL}/tenants/upload-docs`, 
           formData, 
           {
             headers: { 
@@ -212,7 +212,7 @@ const DocumentsPage = () => {
         }
 
         // Recharger les documents depuis le backend
-        const refreshRes = await axios.get(`${API_BASE_URL}/tenant/me`, {
+        const refreshRes = await axios.get(`${API_BASE_URL}/tenants/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

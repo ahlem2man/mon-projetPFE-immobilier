@@ -14,6 +14,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import FolderIcon from '@mui/icons-material/Folder';
 import axios from 'axios';
 import API_BASE_URL from '../../config/api';
 
@@ -54,6 +55,7 @@ const AgencyDashboardLayout = () => {
     { text: 'Mes Annonces', icon: <HomeWorkIcon />, path: '/agency/properties' },
     { text: 'Analytics Global', icon: <BarChartIcon />, path: '/agency/analytics' },
     { text: 'Candidatures', icon: <PeopleIcon />, path: '/agency/applications' },
+    { text: ' Dossiers Locatifs', icon: <FolderIcon />, path: '/agency/tenant-files' },
     { text: 'Avis Clients', icon: <RateReviewIcon />, path: '/agency/reviews' },
     { text: 'Abonnements', icon: <CreditCardIcon />, path: '/agency/subscriptions' },
     { text: 'Vérification Profil', icon: <VerifiedUserIcon />, path: '/agency/verification' },

@@ -84,14 +84,36 @@ exports.uploadVerificationDocs = async (req, res) => {
     }
 
     const { docType } = req.body;
+    console.log('Upload initié - docType:', docType, 'userId:', req.user.id);
+    
+    // Mapping des types de documents français vers les enums du modèle
+    const docTypeMap = {
+      'Kbis': 'AGENCY_LICENSE',
+      'CartePro': 'IDENTITY_CARD',
+      'Assurance': 'REVENUE_PROOF'
+    };
+
+    const mappedType = docTypeMap[docType] || 'OTHER';
     
     // Construction du chemin du fichier
     const fileUrl = `/uploads/${req.file.filename}`;
+    console.log('Fichier uploadé:', req.file.filename, '-> URL:', fileUrl);
+
+    // Créer un enregistrement dans la collection Document
+    const Document = require('../models/Document');
+    const docRecord = await Document.create({
+      ownerId: req.user.id,
+      ownerType: 'agency',
+      type: mappedType,
+      fileUrl: fileUrl,
+      status: 'en attente'
+    });
+    console.log('Document créé:', docRecord._id);
 
     const agency = await Agency.findOneAndUpdate(
       { userId: req.user.id },
       { 
-        $push: { verificationDocs: { docType, fileUrl, uploadedAt: new Date() } },
+        $push: { verificationDocs: { docType, fileUrl, uploadedAt: new Date(), documentId: docRecord._id } },
         verificationStatus: 'pending' 
       },
       { new: true }
@@ -99,9 +121,11 @@ exports.uploadVerificationDocs = async (req, res) => {
     
     res.status(200).json({ 
       message: "Document téléchargé avec succès", 
-      data: agency 
+      data: agency,
+      document: docRecord
     });
   } catch (error) {
+    console.error('Erreur upload document:', error);
     res.status(500).json({ message: "Erreur lors du téléchargement", error: error.message });
   }
 };

@@ -2,20 +2,21 @@ const mongoose = require('mongoose');
 
 const documentSchema = new mongoose.Schema({
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  ownerType: { type: String, enum: ['agency', 'tenant'], required: true },
   fileUrl: { type: String, required: true },
   type: { 
     type: String, 
     required: true,
-    // Optionnel: enum pour normaliser (ex: 'ID', 'Tax', 'Contract')
+    enum: ['AGENCY_LICENSE', 'IDENTITY_CARD', 'REVENUE_PROOF', 'WORK_CONTRACT', 'OTHER']
   }, 
   status: { 
     type: String, 
     enum: ['en attente', 'validé', 'rejeté'], 
     default: 'en attente' 
   },
-  // --- AJOUTS SPRINT 11 ---
-  adminNotes: { type: String }, // Pourquoi le doc est rejeté ?
-  verifiedAt: { type: Date }    // Pour les rapports et analytics
+  adminNotes: { type: String }, // Raison du rejet ou commentaires
+  verifiedAt: { type: Date },   // Date de validation
+  verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // Admin qui a validé
 }, { timestamps: true });
 
 module.exports = mongoose.model('Document', documentSchema);

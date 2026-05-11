@@ -37,7 +37,7 @@ export default function DashboardHomePage() {
         const token = localStorage.getItem('token');
         
         // Fetch favorites
-        const favRes = await axios.get(`${API_BASE_URL}/tenant/favorites`, {
+        const favRes = await axios.get(`${API_BASE_URL}/tenants/favorites`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

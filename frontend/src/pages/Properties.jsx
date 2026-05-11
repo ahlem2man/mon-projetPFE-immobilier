@@ -123,7 +123,7 @@ const Properties = () => {
       };
 
       await axios.post(
-        `${API_BASE_URL}/tenant/save-search`,
+        `${API_BASE_URL}/tenants/save-search`,
         { label: searchLabel, filters },
         { headers: { Authorization: `Bearer ${token}` } }
       );

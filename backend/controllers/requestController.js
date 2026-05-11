@@ -188,11 +188,11 @@ exports.updateRequestStatus = async (req, res) => {
     const { id } = req.params;
     const { status, comment, internalNote } = req.body;
 
-    console.log('\n🔵🔵🔵 === updateRequestStatus DÉBUT === 🔵🔵🔵');
-    console.log('📝 Request ID:', id);
-    console.log('📋 Status:', status, '| Note:', internalNote ? 'OUI' : 'NON');
+    console.log('\n === updateRequestStatus DÉBUT === ');
+    console.log(' Request ID:', id);
+    console.log(' Status:', status, '| Note:', internalNote ? 'OUI' : 'NON');
 
-    // ✨ MODIFICATION: Status est maintenant OPTIONNEL (peut juste ajouter une note)
+    //  MODIFICATION: Status est maintenant OPTIONNEL (peut juste ajouter une note)
     if (!status && !internalNote) {
       return res.status(400).json({ success: false, message: 'Fournir un statut ou une note' });
     }
@@ -205,28 +205,28 @@ exports.updateRequestStatus = async (req, res) => {
     console.log('🔍 Recherche...');
     const request = await Request.findById(id);
     if (!request) {
-      console.log('❌ Non trouvée');
+      console.log(' Non trouvée');
       return res.status(404).json({ success: false, message: 'Candidature introuvable' });
     }
 
     // Vérifier ownership
-    console.log('🔐 Vérif ownership...');
+    console.log(' Vérif ownership...');
     const userIdStr = (req.user.id?.toString?.() || String(req.user.id)).trim();
     const ownerIdStr = (request.ownerId?.toString?.() || String(request.ownerId)).trim();
     
     if (userIdStr !== ownerIdStr) {
-      console.log('❌ Propriétaire:', ownerIdStr, 'User:', userIdStr);
+      console.log(' Propriétaire:', ownerIdStr, 'User:', userIdStr);
       return res.status(403).json({ success: false, message: 'Non autorisé' });
     }
 
     // Préparer les mises à jour
-    console.log('📤 Préparation mises à jour...');
+    console.log(' Préparation mises à jour...');
     const updates = {
       updatedAt: new Date(),
       $push: {}
     };
 
-    // ✨ NOUVEAU: Si statut fourni, ajouter à l'historique
+    //  NOUVEAU: Si statut fourni, ajouter à l'historique
     if (status) {
       const statusHistoryEntry = {
         status: status,
@@ -235,29 +235,29 @@ exports.updateRequestStatus = async (req, res) => {
       };
       updates.status = status;
       updates.$push.statusHistory = statusHistoryEntry;
-      console.log('✏️  Changement de statut vers:', status);
+      console.log('  Changement de statut vers:', status);
     }
 
-    // ✨ Ajouter note si présente (INDÉPENDANT du statut)
+    //  Ajouter note si présente (INDÉPENDANT du statut)
     if (internalNote) {
       updates.$push.internalNotes = {
         content: internalNote,
         date: new Date()
       };
-      console.log('📝 Ajout note:', internalNote.substring(0, 50) + '...');
+      console.log(' Ajout note:', internalNote.substring(0, 50) + '...');
     }
 
     // Utiliser findByIdAndUpdate qui est plus robuste
-    console.log('💾 UPDATE EN COURS...');
+    console.log(' UPDATE EN COURS...');
     const updated = await Request.findByIdAndUpdate(
       id,
       updates,
       { new: true, runValidators: false }  // Désactiver les validateurs
     );
 
-    console.log('✅✅✅ UPDATE OK ✅✅✅');
+    console.log(' UPDATE OK ');
     
-    // 📢 Notifier le locataire si le statut a changé
+    //  Notifier le locataire si le statut a changé
     if (status) {
       try {
         const statusMessages = {
@@ -283,17 +283,17 @@ exports.updateRequestStatus = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      message: status ? `Statut changé en ${status}` : '📝 Note enregistrée',
+      message: status ? `Statut changé en ${status}` : ' Note enregistrée',
       data: { _id: updated._id, status: updated.status, notesCount: updated.internalNotes.length }
     });
-    console.log('🟢 Réponse envoyée\n');
+    console.log(' Réponse envoyée\n');
 
   } catch (error) {
-    console.error('\n❌❌❌ ERREUR ❌❌❌');
+    console.error('\n ERREUR ');
     console.error('Message:', error.message);
     console.error('Type:', error.name);
     console.error('Stack:', error.stack.split('\n').slice(0, 3).join('\n'));
-    console.error('❌❌❌\n');
+    console.error('\n');
     
     res.status(500).json({ 
       success: false,
@@ -314,7 +314,7 @@ exports.getAgencyRequests = async (req, res) => {
 
     let query = { propertyId: { $in: propertyIds } }; // Chercher par propriétés plutôt que par ownerId
 
-    // 🔍 FILTRAGE PAR STATUT (case-insensitive)
+    //  FILTRAGE PAR STATUT (case-insensitive)
     if (req.query.status && req.query.status !== 'tous') {
       // Adapter les statuts selon ce qui est envoyé
       const statusMap = {
@@ -328,7 +328,7 @@ exports.getAgencyRequests = async (req, res) => {
       query.status = mappedStatus;
     }
 
-    // 📅 FILTRAGE PAR DATE
+    //  FILTRAGE PAR DATE
     if (req.query.startDate || req.query.endDate) {
       query.createdAt = {};
       
@@ -401,7 +401,7 @@ exports.bulkUpdateRequests = async (req, res) => {
   }
 };
 
-// ✨ NOUVEAU: Statistiques avancées pour le Sprint 9 (Point 9)
+//  NOUVEAU: Statistiques avancées pour le Sprint 9 (Point 9)
 // @desc    Récupérer les statistiques avancées des demandes pour une agence
 // @route   GET /api/requests/agency/stats
 // @access  Private (Owner/Agency)

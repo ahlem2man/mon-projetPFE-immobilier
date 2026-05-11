@@ -6,6 +6,7 @@ const Document = require('../models/Document');
 
 const Payment = require('../models/Payment');
 const Request = require('../models/Request'); // Pour les demandes
+const { logActivity } = require('./activityLogController');
 
 
 // @desc    Obtenir tous les utilisateurs avec filtres (Point 2 & 5)
@@ -60,6 +61,20 @@ exports.updateUserStatus = async (req, res) => {
         }
       );
     }
+
+      const activityAction = typeof isSuspended !== 'undefined'
+        ? (isSuspended ? 'user_suspended' : 'user_unsuspended')
+        : (typeof isVerified !== 'undefined' && isVerified ? 'user_verified' : 'bulk_action');
+
+      await logActivity(
+        req.user.id,
+        activityAction,
+        'User',
+        req.params.id,
+        { updatedFields: { isSuspended, isVerified } },
+        req.ip,
+        req.get('user-agent')
+      );
     
     res.status(200).json({ success: true, data: user });
   } catch (err) {
@@ -88,6 +103,16 @@ exports.moderateProperty = async (req, res) => {
       req.params.id,
       { moderationStatus, adminNotes },
       { new: true }
+    );
+
+    await logActivity(
+      req.user.id,
+      'property_moderated',
+      'Property',
+      req.params.id,
+      { moderationStatus, adminNotes },
+      req.ip,
+      req.get('user-agent')
     );
     res.status(200).json({ success: true, data: property });
   } catch (err) {
@@ -138,6 +163,16 @@ exports.updateUser = async (req, res) => {
       );
     }
 
+    await logActivity(
+      req.user.id,
+      'bulk_action',
+      'User',
+      req.params.id,
+      { operation: 'updateUser', updateData },
+      req.ip,
+      req.get('user-agent')
+    );
+
     res.status(200).json({ success: true, data: user });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -153,6 +188,16 @@ exports.deleteUser = async (req, res) => {
     }
     // Supprimer aussi ses propriétés
     await Property.deleteMany({ owner: req.params.id });
+
+    await logActivity(
+      req.user.id,
+      'user_deleted',
+      'User',
+      req.params.id,
+      { deletedEmail: user.email },
+      req.ip,
+      req.get('user-agent')
+    );
     
     res.status(200).json({ success: true, message: 'Utilisateur supprimé' });
   } catch (err) {
@@ -199,6 +244,17 @@ exports.bulkAction = async (req, res) => {
         // Supprimer les utilisateurs et leurs propriétés
         await Property.deleteMany({ owner: { $in: ids } });
         await User.deleteMany({ _id: { $in: ids } });
+
+        await logActivity(
+          req.user.id,
+          'user_deleted',
+          'User',
+          ids[0],
+          { operation: 'bulkDelete', count: ids.length, ids },
+          req.ip,
+          req.get('user-agent')
+        );
+
         return res.status(200).json({ success: true, message: `${ids.length} utilisateurs supprimés` });
       default:
         return res.status(400).json({ success: false, message: 'Action invalide' });
@@ -207,6 +263,16 @@ exports.bulkAction = async (req, res) => {
     const result = await User.updateMany(
       { _id: { $in: ids } },
       updateData
+    );
+
+    await logActivity(
+      req.user.id,
+      'bulk_action',
+      'User',
+      ids[0],
+      { operation: action, count: ids.length, ids, updateData },
+      req.ip,
+      req.get('user-agent')
     );
 
     res.status(200).json({ 
@@ -232,10 +298,12 @@ exports.getPropertyDetail = async (req, res) => {
 };
 
 // @desc    Lister tous les documents en attente de vérification
+// @desc    Obtenir les documents en attente de vérification
 exports.getPendingDocuments = async (req, res) => {
   try {
-    const docs = await Document.find({ status: 'pending' })
-      .populate('owner', 'name email role');
+    const docs = await Document.find({ status: 'en attente' })
+      .populate('ownerId', 'fullName email role')
+      .sort('-createdAt');
     res.status(200).json({ success: true, data: docs });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -246,21 +314,63 @@ exports.getPendingDocuments = async (req, res) => {
 exports.verifyDocument = async (req, res) => {
   try {
     const { status, adminNotes } = req.body;
+    console.log('Vérification de document:', req.params.id, 'Status:', status);
     
     const doc = await Document.findByIdAndUpdate(
       req.params.id,
-      { status, adminNotes, verifiedAt: Date.now() },
+      { 
+        status, 
+        adminNotes, 
+        verifiedAt: new Date(),
+        verifiedBy: req.user.id
+      },
       { new: true }
-    );
+    ).populate('verifiedBy', 'fullName');
+
+    console.log('Document mis à jour:', doc);
 
     // Si le document est une licence d'agence et qu'il est validé, 
-    // on peut automatiquement vérifier l'utilisateur
-    if (doc.type === 'AGENCY_LICENSE' && status === 'verified') {
-      await User.findByIdAndUpdate(doc.owner, { isVerified: true });
+    // on peut automatiquement vérifier l'agence
+    if (doc.type === 'AGENCY_LICENSE' && status === 'validé') {
+      console.log('✅ Condition déclenchée: AGENCY_LICENSE + validé');
+      console.log('ownerId:', doc.ownerId);
+      
+      const userUpdate = await User.findByIdAndUpdate(doc.ownerId, { isVerified: true }, { new: true });
+      console.log('User mis à jour:', userUpdate);
+      
+      const agencyUpdate = await Agency.findOneAndUpdate(
+        { userId: doc.ownerId },
+        { isVerifiedByAdmin: true, verificationStatus: 'approved' },
+        { new: true }
+      );
+      console.log('Agency mise à jour:', agencyUpdate);
+
+      await logActivity(
+        req.user.id,
+        'user_verified',
+        'User',
+        doc.ownerId,
+        { operation: 'autoVerifyFromAgencyLicense', documentId: doc._id, status },
+        req.ip,
+        req.get('user-agent')
+      );
+    } else {
+      console.log('❌ Condition non déclenchée:', { type: doc.type, status });
     }
+
+    await logActivity(
+      req.user.id,
+      'document_verified',
+      'Document',
+      req.params.id,
+      { status, adminNotes, documentType: doc.type },
+      req.ip,
+      req.get('user-agent')
+    );
 
     res.status(200).json({ success: true, data: doc });
   } catch (err) {
+    console.error('Erreur verifyDocument:', err);
     res.status(400).json({ success: false, message: err.message });
   }
 };

@@ -18,7 +18,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/tenant/me`, {
+        const res = await axios.get(`${API_BASE_URL}/tenants/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         if (res.data) {
@@ -45,7 +45,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaved(false);
     try {
-      const res = await axios.put(`${API_BASE_URL}/tenant/profile`, profile, {
+      const res = await axios.put(`${API_BASE_URL}/tenants/profile`, profile, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setCompletion(res.data.completionPercentage);

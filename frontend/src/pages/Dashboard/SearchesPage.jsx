@@ -29,7 +29,7 @@ export default function SearchesPage() {
   }, []);
 
   const fetchSearches = () => {
-    axios.get(`${API_BASE_URL}/tenant/me`, {
+    axios.get(`${API_BASE_URL}/tenants/me`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
       .then(res => setSearches(res.data.savedSearches || []))
@@ -66,7 +66,7 @@ export default function SearchesPage() {
     try {
       setLoading(true);
       await axios.put(
-        `${API_BASE_URL}/tenant/update-search/${editingSearchId}`,
+        `${API_BASE_URL}/tenants/update-search/${editingSearchId}`,
         { label: editLabel, filters: editFilters },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -83,7 +83,7 @@ export default function SearchesPage() {
   const handleDelete = async (searchId) => {
     try {
       setLoading(true);
-      await axios.delete(`${API_BASE_URL}/tenant/delete-search/${searchId}`, {
+      await axios.delete(`${API_BASE_URL}/tenants/delete-search/${searchId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setAlertMsg('Recherche supprimée !');
@@ -98,7 +98,7 @@ export default function SearchesPage() {
   const handleRelancer = async (searchId) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/tenant/search/${searchId}`, {
+      const response = await axios.get(`${API_BASE_URL}/tenants/search/${searchId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       

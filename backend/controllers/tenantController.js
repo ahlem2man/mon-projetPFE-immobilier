@@ -1,5 +1,228 @@
 const Tenant = require('../models/Tenant');
 const calculateCompletion = require('../utils/calculateCompletion');
+const mongoose = require('mongoose');
+
+//  Récupérer tous les dossiers locatifs (pour l'agence)
+exports.getAllTenantFiles = async (req, res) => {
+  try {
+    console.log('[GET /files/all] Récupération de tous les dossiers locatifs');
+    
+    const User = require('../models/User');
+    
+    // Récupérer tous les locataires qui ont un profil (avec au moins des documents)
+    const tenants = await Tenant.find({
+      $or: [
+        { 'documents.identityCard': { $exists: true, $ne: null } },
+        { completionPercentage: { $gt: 0 } }
+      ]
+    }).populate('userId', 'fullName email phone').sort('-updatedAt');
+
+    console.log(`[GET /files/all] ${tenants.length} dossiers trouvés`);
+
+    // Formatter les données
+    const formattedTenants = tenants.map(tenant => ({
+      _id: tenant._id,
+      userId: tenant.userId?._id,
+      fullName: tenant.userId?.fullName || 'N/A',
+      email: tenant.userId?.email || 'N/A',
+      phone: tenant.userId?.phone || 'N/A',
+      documents: tenant.documents || {},
+      completionPercentage: tenant.completionPercentage || 0,
+      createdAt: tenant.createdAt,
+      updatedAt: tenant.updatedAt
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: formattedTenants.length,
+      data: formattedTenants
+    });
+  } catch (error) {
+    console.error('[GET /files/all] Erreur:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Erreur serveur", 
+      error: error.message 
+    });
+  }
+};
+
+// 🆕 Mettre à jour le statut du dossier
+exports.updateFileStatus = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const { status, note } = req.body;
+
+    console.log(`[PATCH /file/${tenantId}/status] Reçu: tenantId=${tenantId}, status=${status}, note=${note}`);
+
+    // Valider l'ObjectId
+    if (!mongoose.Types.ObjectId.isValid(tenantId)) {
+      console.log(`[PATCH /file/${tenantId}/status] ERREUR: tenantId invalide`);
+      return res.status(400).json({ message: "ID tenant invalide" });
+    }
+
+    // Valider le statut
+    const validStatuses = ['pending', 'verified', 'rejected', 'info_required'];
+    if (!validStatuses.includes(status)) {
+      console.log(`[PATCH /file/${tenantId}/status] ERREUR: statut invalide=${status}`);
+      return res.status(400).json({ message: "Statut invalide" });
+    }
+
+    // Récupérer le tenant avant la mise à jour
+    const tenantBefore = await Tenant.findById(tenantId);
+    console.log(`[PATCH /file/${tenantId}/status] Tenant avant: exists=${!!tenantBefore}, documents=${Object.keys(tenantBefore?.documents || {}).length}`);
+
+    // Mettre à jour le statut et ajouter à l'historique
+    const tenant = await Tenant.findByIdAndUpdate(
+      tenantId,
+      {
+        $set: { fileStatus: status },
+        $push: {
+          fileHistory: {
+            status: status,
+            note: note || '',
+            agencyId: req.user.id,
+            createdAt: new Date()
+          }
+        }
+      },
+      { new: true }
+    ).populate('userId', 'fullName email phone');
+
+    if (!tenant) {
+      console.log(`[PATCH /file/${tenantId}/status] ERREUR: Tenant NOT FOUND après update`);
+      return res.status(404).json({ message: "Dossier locataire non trouvé" });
+    }
+
+    console.log(`[PATCH /file/${tenantId}/status] ✓ Tenant mis à jour: status=${tenant.fileStatus}, documents=${Object.keys(tenant.documents || {}).length}`);
+
+    // 🆕 Créer une notification au locataire
+    const Notification = require('../models/Notification');
+    const statusMessages = {
+      verified: ' Votre dossier a été approuvé!',
+      rejected: ' Votre dossier a été refusé.',
+      info_required: ' Des informations supplémentaires sont requises pour votre dossier.',
+      pending: ' Votre dossier est en attente de traitement.'
+    };
+
+    const notification = await Notification.create({
+      recipient: tenant.userId._id,
+      message: statusMessages[status],
+      type: 'status_change',
+      link: '/dashboard/documents'
+    });
+
+    console.log(`[PATCH /file/${tenantId}/status] ✓ Notification créée pour ${tenant.userId._id}`);
+
+    res.status(200).json({
+      success: true,
+      message: `Dossier ${status === 'verified' ? 'vérifié' : status === 'rejected' ? 'rejeté' : status === 'info_required' ? 'en attente d\'infos' : 'en attente'}`,
+      data: {
+        _id: tenant._id,
+        userId: tenant.userId,
+        fullName: tenant.userId?.fullName || 'N/A',
+        email: tenant.userId?.email || 'N/A',
+        phone: tenant.userId?.phone || 'N/A',
+        documents: tenant.documents || {},
+        completionPercentage: tenant.completionPercentage || 0,
+        fileStatus: tenant.fileStatus,
+        fileHistory: tenant.fileHistory,
+        professionalStatus: tenant.professionalStatus || {},
+        createdAt: tenant.createdAt,
+        updatedAt: tenant.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error(`[PATCH /file/:tenantId/status] Erreur:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Erreur serveur", 
+      error: error.message 
+    });
+  }
+};
+
+// 🆕 Ajouter une note au dossier
+exports.addFileNote = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const { note } = req.body;
+
+    if (!note || !note.trim()) {
+      return res.status(400).json({ message: "La note ne peut pas être vide" });
+    }
+
+    console.log(`[POST /file/${tenantId}/note] Reçu: tenantId=${tenantId}, note=${note.substring(0, 50)}...`);
+
+    // Valider l'ObjectId
+    if (!mongoose.Types.ObjectId.isValid(tenantId)) {
+      console.log(`[POST /file/${tenantId}/note] ERREUR: tenantId invalide`);
+      return res.status(400).json({ message: "ID tenant invalide" });
+    }
+
+    // Ajouter une note à l'historique avec le statut actuel
+    const tenant = await Tenant.findById(tenantId);
+    if (!tenant) {
+      console.log(`[POST /file/${tenantId}/note] ERREUR: Tenant NOT FOUND`);
+      return res.status(404).json({ message: "Dossier locataire non trouvé" });
+    }
+    console.log(`[POST /file/${tenantId}/note] Tenant trouvé: fileStatus=${tenant.fileStatus}`);
+
+    const updatedTenant = await Tenant.findByIdAndUpdate(
+      tenantId,
+      {
+        $push: {
+          fileHistory: {
+            status: tenant.fileStatus,
+            note: note,
+            agencyId: req.user.id,
+            createdAt: new Date()
+          }
+        }
+      },
+      { new: true }
+    ).populate('userId', 'fullName email phone');
+
+    console.log(`[POST /file/${tenantId}/note] ✓ Note ajoutée: documents=${Object.keys(updatedTenant.documents || {}).length}`);
+
+    // 🆕 Créer une notification au locataire que l'agence a ajouté une note
+    const Notification = require('../models/Notification');
+    const notification = await Notification.create({
+      recipient: updatedTenant.userId._id,
+      message: '📝 L\'agence a ajouté une note à votre dossier.',
+      type: 'status_change',
+      link: '/dashboard/documents'
+    });
+
+    console.log(`[POST /file/${tenantId}/note] ✓ Notification créée pour ${updatedTenant.userId._id}`);
+
+    res.status(200).json({
+      success: true,
+      message: "Note enregistrée",
+      data: {
+        _id: updatedTenant._id,
+        userId: updatedTenant.userId,
+        fullName: updatedTenant.userId?.fullName || 'N/A',
+        email: updatedTenant.userId?.email || 'N/A',
+        phone: updatedTenant.userId?.phone || 'N/A',
+        documents: updatedTenant.documents || {},
+        completionPercentage: updatedTenant.completionPercentage || 0,
+        fileStatus: updatedTenant.fileStatus,
+        fileHistory: updatedTenant.fileHistory,
+        professionalStatus: updatedTenant.professionalStatus || {},
+        createdAt: updatedTenant.createdAt,
+        updatedAt: updatedTenant.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error(`[POST /file/:tenantId/note] Erreur:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Erreur serveur", 
+      error: error.message 
+    });
+  }
+};
 
 // 1. Récupérer le profil du locataire connecté
 exports.getTenantProfile = async (req, res) => {
@@ -15,13 +238,13 @@ exports.getTenantProfile = async (req, res) => {
     
     // NETTOYAGE: Si le Tenant a un champ preferences legacy, le supprimer
     if (tenant && tenant.preferences) {
-      console.log('[GET /me] ⚠️  Tenant a un champ preferences legacy - NETTOYAGE...');
+      console.log('[GET /me]   Tenant a un champ preferences legacy - NETTOYAGE...');
       tenant = await Tenant.findOneAndUpdate(
         { userId: req.user.id },
         { $unset: { preferences: 1 } },
         { new: true }
       );
-      console.log('[GET /me] ✅ Champ preferences legacy supprimé du Tenant');
+      console.log('[GET /me]  Champ preferences legacy supprimé du Tenant');
     }
     
     // Construire le response SANS le champ preferences du Tenant
@@ -46,7 +269,7 @@ exports.getTenantProfile = async (req, res) => {
     // TOUJOURS ajouter les préférences du User model (pas du Tenant!)
     if (user?.preferences) {
       response.preferences = user.preferences;
-      console.log('[GET /me] ✅ Retourne les préférences du User model');
+      console.log('[GET /me]  Retourne les préférences du User model');
     } else {
       // Si pas de préférences User, retourner un objet vide
       response.preferences = {
@@ -58,13 +281,60 @@ exports.getTenantProfile = async (req, res) => {
         moveInDate: null,
         wantedAmenities: []
       };
-      console.log('[GET /me] ⚠️  Pas de préférences User - retourne objet vide');
+      console.log('[GET /me]   Pas de préférences User - retourne objet vide');
     }
     
     res.json(response);
   } catch (error) {
     console.error('[GET /me] Erreur:', error);
     res.status(500).json({ message: "Erreur serveur" });
+  }
+};
+
+// 1b. Récupérer le profil d'un locataire spécifique (pour l'agence)
+exports.getTenantProfileByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('[GET /profile/:userId] userId reçu:', userId);
+    
+    //  Vérifier que c'est un ObjectId valide
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.log('[GET /profile/:userId] userId INVALIDE:', userId);
+      return res.status(400).json({ message: "ID utilisateur invalide" });
+    }
+    
+    const objectId = new mongoose.Types.ObjectId(userId);
+    console.log('[GET /profile/:userId] Recherche de tenant avec userId:', objectId);
+    
+    const tenant = await Tenant.findOne({ userId: objectId });
+    
+    if (!tenant) {
+      console.log('[GET /profile/:userId] Tenant NOT FOUND pour userId:', objectId);
+      return res.status(404).json({ message: "Profil locataire non trouvé" });
+    }
+    
+    console.log('[GET /profile/:userId] Tenant trouvé:', tenant._id);
+    res.json({ 
+      success: true,
+      data: {
+        _id: tenant._id,
+        userId: tenant.userId,
+        profession: tenant.profession,
+        employmentType: tenant.employmentType,
+        income: tenant.income,
+        employer: tenant.employer,
+        professionalStatus: tenant.professionalStatus || {},
+        documents: tenant.documents || {},
+        completionPercentage: tenant.completionPercentage || 0,
+        fileStatus: tenant.fileStatus || 'pending',
+        fileHistory: tenant.fileHistory || [],
+        createdAt: tenant.createdAt,
+        updatedAt: tenant.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('[GET /profile/:userId] Erreur:', error.message);
+    res.status(500).json({ success: false, message: "Erreur serveur", error: error.message });
   }
 };
 
@@ -102,7 +372,7 @@ exports.updateProfile = async (req, res) => {
 
     console.log('[PUT /profile] updateData:', updateData);
 
-    // 🆕 Assurer que le Tenant existe avec tous les champs
+    //  Assurer que le Tenant existe avec tous les champs
     let tenant = await Tenant.findOne({ userId: req.user.id });
     if (!tenant) {
       // Créer un nouveau Tenant avec tous les champs initialisés
@@ -280,7 +550,7 @@ exports.uploadDocuments = async (req, res) => {
   }
 };
 
-// 🆕 3b. Upload d'un seul document (permet updates individuels sans écraser les autres)
+//  3b. Upload d'un seul document (permet updates individuels sans écraser les autres)
 exports.uploadSingleDocument = async (req, res) => {
   try {
     const { docType } = req.params;
@@ -361,7 +631,7 @@ exports.uploadSingleDocument = async (req, res) => {
   }
 };
 
-// 🆕 3c. Supprimer un document
+//  3c. Supprimer un document
 exports.deleteDocument = async (req, res) => {
   try {
     const { docType } = req.params;

@@ -77,7 +77,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
-app.use('/api/tenant', tenantRoutes);
+app.use('/api/tenants', tenantRoutes);
 app.use('/api/requests', requestRoutes); // Branchement
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/matchings', matchingRoutes);

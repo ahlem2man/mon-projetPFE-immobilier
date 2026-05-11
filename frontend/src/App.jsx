@@ -42,6 +42,8 @@ import PropertyEditPage from './pages/DashbordAgency/PropertyEditPage';
 import AgencyApplications from './pages/DashbordAgency/AgencyApplications';
 import ApplicationDetail from './pages/DashbordAgency/ApplicationDetail';
 import PropertyAnalyticsPage from './pages/DashbordAgency/PropertyAnalyticsPage';
+import TenantFilesPage from './pages/DashbordAgency/TenantFilesPage';
+import TenantFilesDetailPage from './pages/DashbordAgency/TenantFilesDetailPage';
 import GlobalAnalyticsPage from './pages/Dashboard/GlobalAnalyticsPage';
 import DashboardHomePage from './pages/Dashboard/DashboardHomePage';
 import AdminDashboardLayout from './pages/DashboardAdmin/AdminDashboardLayout';
@@ -125,6 +127,8 @@ function App() {
                   <Route path="analytics" element={<GlobalAnalyticsPage />} />
                   <Route path="applications" element={<AgencyApplications />} />
                   <Route path="applications/:id" element={<ApplicationDetail />} />
+                  <Route path="tenant-files" element={<TenantFilesPage />} />
+                  <Route path="tenant-files/:tenantId" element={<TenantFilesDetailPage />} />
                   <Route path="properties" element={<PropertiesList />} />
                   <Route path="properties/add" element={<AddPropertyStepper />} />
                   <Route path="properties/:id/edit" element={<PropertyEditPage />} />

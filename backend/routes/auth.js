@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto'); 
 const { protect: authMiddleware } = require('../middleware/auth');
+const { logActivity } = require('../controllers/activityLogController');
 
 
 
@@ -94,6 +95,18 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET || 'secret_provisoire',
       { expiresIn: '1d' }
     );
+
+    if (user.role === 'admin' || user.role === 'superadmin') {
+      await logActivity(
+        user._id,
+        'admin_login',
+        'User',
+        user._id,
+        { email: user.email },
+        req.ip,
+        req.get('user-agent')
+      );
+    }
 
     res.json({
       token,

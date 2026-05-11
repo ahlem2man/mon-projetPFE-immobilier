@@ -36,7 +36,7 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
 
       try {
         const res = await axios.get(
-          `${API_BASE_URL}/tenant/favorites/check/${property._id}`,
+          `${API_BASE_URL}/tenants/favorites/check/${property._id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setIsFav(res.data.isFavorite || false);
@@ -69,7 +69,7 @@ const PropertyCard = ({ property, onFavoriteChange }) => {
     try {
       // Utilise l'API Sprint 4 : POST ou DELETE selon l'état actuel
       const method = isFav ? 'delete' : 'post';
-      const endpoint = `${API_BASE_URL}/tenant/favorites/${property._id}`;
+      const endpoint = `${API_BASE_URL}/tenants/favorites/${property._id}`;
       
       if (isFav) {
         await axios.delete(endpoint, {
