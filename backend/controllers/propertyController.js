@@ -1,4 +1,6 @@
 const Property = require('../models/Property');
+const { logUserActivity } = require('./activityLogController');
+const { notifyAdmins } = require('./notificationController');
 
 // ==========================================
 // 1. RECHERCHE ET CONSULTATION (PUBLIC)
@@ -169,6 +171,36 @@ exports.createProperty = async (req, res) => {
       images: imagePaths,
       owner: req.user.id // ID récupéré depuis le middleware 'protect'
     });
+
+    // 📝 Log l'activité : Annonce créée
+    await logUserActivity(
+      req.user.id,
+      'agency',
+      'property_created',
+      'Property',
+      property._id,
+      {
+        before: null,
+        after: {
+          title: property.title,
+          price: property.price,
+          location: property.location,
+          type: property.type
+        },
+        reason: 'Création d\'une nouvelle annonce',
+        notes: `Annonce: ${property.title}`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
+
+    // Notifier les admins d'une nouvelle propriété
+    await notifyAdmins(
+      `Nouvelle propriété à modérer: ${property.title} (${property.location})`,
+      '/dashboard-admin/properties',
+      'status_change'
+    );
+
     res.status(201).json({ success: true, data: property });
   } catch (error) {
     console.error('Erreur createProperty:', error);
@@ -230,6 +262,19 @@ exports.updateProperty = async (req, res) => {
     const property = await Property.findOne({ _id: req.params.id, owner: req.user.id });
     if (!property) return res.status(404).json({ success: false, message: "Non autorisé" });
 
+    // Capturer l'état AVANT modification
+    const propertyBefore = {
+      title: property.title,
+      description: property.description,
+      price: property.price,
+      type: property.type,
+      location: property.location,
+      address: property.address,
+      surface: property.surface,
+      rooms: property.rooms,
+      status: property.status
+    };
+
     const allowedFields = ['title', 'description', 'price', 'location', 'address', 'type', 'surface', 'rooms', 'amenities', 'status'];
     Object.keys(req.body).forEach(key => {
       if (allowedFields.includes(key)) {
@@ -277,6 +322,36 @@ exports.updateProperty = async (req, res) => {
     property.images = finalImages;
 
     await property.save();
+
+    // 📝 Log l'activité : Annonce modifiée
+    const propertyAfter = {
+      title: property.title,
+      description: property.description,
+      price: property.price,
+      type: property.type,
+      location: property.location,
+      address: property.address,
+      surface: property.surface,
+      rooms: property.rooms,
+      status: property.status
+    };
+
+    await logUserActivity(
+      req.user.id,
+      'agency',
+      'property_updated',
+      'Property',
+      property._id,
+      {
+        before: propertyBefore,
+        after: propertyAfter,
+        reason: 'Modification d\'une annonce',
+        notes: `Annonce: ${property.title}`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
+
     res.status(200).json({ success: true, data: property });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -286,8 +361,36 @@ exports.updateProperty = async (req, res) => {
 // @desc    Supprimer une annonce
 exports.deleteProperty = async (req, res) => {
   try {
-    const property = await Property.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+    const property = await Property.findOne({ _id: req.params.id, owner: req.user.id });
     if (!property) return res.status(404).json({ success: false, message: "Action interdite" });
+
+    // Capturer l'état AVANT suppression
+    const propertyData = {
+      title: property.title,
+      price: property.price,
+      location: property.location,
+      type: property.type
+    };
+
+    await Property.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+
+    // 📝 Log l'activité : Annonce supprimée
+    await logUserActivity(
+      req.user.id,
+      'agency',
+      'property_deleted',
+      'Property',
+      req.params.id,
+      {
+        before: propertyData,
+        after: null,
+        reason: 'Suppression d\'une annonce',
+        notes: `Annonce supprimée: ${property.title}`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
+
     res.status(200).json({ success: true, message: "Supprimé" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

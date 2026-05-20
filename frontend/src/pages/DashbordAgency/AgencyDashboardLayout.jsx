@@ -13,6 +13,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
+import PaymentIcon from '@mui/icons-material/Payment';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import FolderIcon from '@mui/icons-material/Folder';
 import axios from 'axios';
@@ -25,20 +26,36 @@ const AgencyDashboardLayout = () => {
   const location = useLocation();
   
   const [isVerified, setIsVerified] = useState(false);
+  const [agencyName, setAgencyName] = useState('Mon Agence');
 
   // Charger le statut de vérification de l'agence
   useEffect(() => {
     const fetchAgencyStatus = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_BASE_URL}/agency/me`, {
-          headers: { Authorization: `Bearer ${token}` }
+        // Ajouter un paramètre de cache-busting pour forcer le rafraîchissement
+        const response = await axios.get(`${API_BASE_URL}/agency/me?t=${Date.now()}`, {
+          headers: { 
+            Authorization: `Bearer ${token}`
+          }
         });
+        console.log('[DEBUG] Réponse /agency/me:', response.data);
+        
+        // Récupérer le nom de l'agence
+        if (response.data && response.data.name) {
+          setAgencyName(response.data.name);
+        }
+        
         // Utiliser isVerifiedByAdmin si disponible, sinon vérifier isVerified
         if (response.data && response.data.isVerifiedByAdmin !== undefined) {
+          console.log('[DEBUG] isVerifiedByAdmin:', response.data.isVerifiedByAdmin);
           setIsVerified(response.data.isVerifiedByAdmin);
         } else if (response.data && response.data.verificationStatus === 'approved') {
+          console.log('[DEBUG] verificationStatus approved');
           setIsVerified(true);
+        } else {
+          console.log('[DEBUG] Aucun statut de vérification trouvé');
+          setIsVerified(false);
         }
       } catch (error) {
         console.error('Erreur lors du chargement du statut d\'agence:', error);
@@ -47,6 +64,10 @@ const AgencyDashboardLayout = () => {
     };
 
     fetchAgencyStatus();
+    
+    // Rafraîchir le statut toutes les 5 secondes pour détecter les changements de vérification
+    const interval = setInterval(fetchAgencyStatus, 5000);
+    return () => clearInterval(interval);
   }, []); 
 
   const menuItems = [
@@ -55,7 +76,9 @@ const AgencyDashboardLayout = () => {
     { text: 'Mes Annonces', icon: <HomeWorkIcon />, path: '/agency/properties' },
     { text: 'Analytics Global', icon: <BarChartIcon />, path: '/agency/analytics' },
     { text: 'Candidatures', icon: <PeopleIcon />, path: '/agency/applications' },
-    { text: ' Dossiers Locatifs', icon: <FolderIcon />, path: '/agency/tenant-files' },
+    { text: 'Rapports Demandes', icon: <BarChartIcon />, path: '/agency/requests-report' },
+    { text: 'Dossiers Locatifs', icon: <FolderIcon />, path: '/agency/tenant-files' },
+    { text: 'Paiements Reçus', icon: <PaymentIcon />, path: '/agency/payments-received' },
     { text: 'Avis Clients', icon: <RateReviewIcon />, path: '/agency/reviews' },
     { text: 'Abonnements', icon: <CreditCardIcon />, path: '/agency/subscriptions' },
     { text: 'Vérification Profil', icon: <VerifiedUserIcon />, path: '/agency/verification' },
@@ -124,7 +147,7 @@ const AgencyDashboardLayout = () => {
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <AppBar position="static" elevation={0} sx={{ bgcolor: 'transparent', color: 'text.primary', mb: 3 }}>
           <Toolbar sx={{ justifyContent: 'flex-end' }}>
-            <Typography variant="body2" sx={{ mr: 2, fontWeight: 'bold' }}>Agence Immobilière X</Typography>
+            <Typography variant="body2" sx={{ mr: 2, fontWeight: 'bold' }}>{agencyName}</Typography>
             <Avatar sx={{ bgcolor: '#3F51B5' }}>A</Avatar>
           </Toolbar>
         </AppBar>

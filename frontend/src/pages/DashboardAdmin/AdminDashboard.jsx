@@ -17,6 +17,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   // --- AJOUT ÉTAPE 5 : ÉTAT POUR LES DONNÉES DE CROISSANCE ---
   const [growthData, setGrowthData] = useState([]);
+  const [propertiesGrowthData, setPropertiesGrowthData] = useState([]);
+  const [revenueGrowthData, setRevenueGrowthData] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('token');
 
@@ -25,25 +27,47 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         
-        // --- MODIFICATION ÉTAPE 5 : APPEL SIMULTANÉ DES STATS GLOBALES ET DE CROISSANCE ---
-        const [globalRes, growthRes] = await Promise.all([
+        // --- MODIFICATION ÉTAPE 5 : APPEL SIMULTANÉ DE TOUS LES ENDPOINTS ---
+        const [globalRes, growthRes, propsGrowthRes, revenueGrowthRes] = await Promise.all([
           axios.get('http://localhost:5000/api/admin/stats/global', {
             headers: { Authorization: `Bearer ${token}` }
           }),
           axios.get('http://localhost:5000/api/admin/stats/growth', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:5000/api/admin/stats/properties-growth', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:5000/api/admin/stats/revenue-growth', {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
 
         setStats(globalRes.data.data);
         
-        // Formatage des mois pour le graphique (ex: 1 -> Jan)
+        // Formatage des mois pour les graphiques (ex: 1 -> Jan)
         const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+        
+        // Croissance utilisateurs
         const formattedGrowth = growthRes.data.data.map(item => ({
           name: monthNames[item._id - 1] || `Mois ${item._id}`,
           utilisateurs: item.count
         }));
         setGrowthData(formattedGrowth);
+
+        // Croissance annonces
+        const formattedPropsGrowth = propsGrowthRes.data.data.map(item => ({
+          name: monthNames[item._id - 1] || `Mois ${item._id}`,
+          annonces: item.count
+        }));
+        setPropertiesGrowthData(formattedPropsGrowth);
+
+        // Croissance revenus
+        const formattedRevenueGrowth = revenueGrowthRes.data.data.map(item => ({
+          name: monthNames[item._id - 1] || `Mois ${item._id}`,
+          revenus: item.total
+        }));
+        setRevenueGrowthData(formattedRevenueGrowth);
 
       } catch (err) {
         console.error('Erreur lors du chargement du dashboard:', err);
@@ -94,7 +118,7 @@ const AdminDashboard = () => {
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             icon={<EuroIcon />}
             title="Revenus"
@@ -104,7 +128,7 @@ const AdminDashboard = () => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             icon={<PeopleIcon />}
             title="Utilisateurs"
@@ -114,7 +138,7 @@ const AdminDashboard = () => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             icon={<HomeWorkIcon />}
             title="Annonces"
@@ -124,7 +148,7 @@ const AdminDashboard = () => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             icon={<ErrorIcon />}
             title="Demandes"
@@ -137,12 +161,12 @@ const AdminDashboard = () => {
 
       {/* --- AJOUT ÉTAPE 5 : GRAPHIQUE DE CROISSANCE --- */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid rgba(0, 0, 0, 0.08)' }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
               Croissance des Inscriptions (Mensuel)
             </Typography>
-            <Box sx={{ width: '100%', height: 300 }}>
+            <Box sx={{ width: '100%', height: 300, minWidth: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={growthData}>
                   <defs>
@@ -161,6 +185,70 @@ const AdminDashboard = () => {
                     stroke="#3F51B5" 
                     fillOpacity={1} 
                     fill="url(#colorUsers)" 
+                    strokeWidth={3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid rgba(0, 0, 0, 0.08)' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+              Croissance des Annonces (Mensuel)
+            </Typography>
+            <Box sx={{ width: '100%', height: 300, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={propertiesGrowthData}>
+                  <defs>
+                    <linearGradient id="colorProperties" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#009688" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#009688" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area 
+                    type="monotone" 
+                    dataKey="annonces" 
+                    stroke="#009688" 
+                    fillOpacity={1} 
+                    fill="url(#colorProperties)" 
+                    strokeWidth={3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid rgba(0, 0, 0, 0.08)' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
+              Croissance des Revenus (Mensuel)
+            </Typography>
+            <Box sx={{ width: '100%', height: 300, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueGrowthData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2E7D32" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#2E7D32" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => `${value}€`} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="revenus" 
+                    stroke="#2E7D32" 
+                    fillOpacity={1} 
+                    fill="url(#colorRevenue)" 
                     strokeWidth={3}
                   />
                 </AreaChart>

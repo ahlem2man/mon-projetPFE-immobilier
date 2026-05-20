@@ -74,8 +74,8 @@ const Register = () => {
                 fullWidth select label="Type de compte" name="role"
                 value={formData.role} variant="outlined" onChange={handleChange}
               >
-                <MenuItem value="tenant">Locataire / Acheteur</MenuItem>
-                <MenuItem value="agency">Agence Immobilière / Propriétaire</MenuItem>
+                <MenuItem value="tenant">Locataire</MenuItem>
+                <MenuItem value="agency">Agence Immobilière</MenuItem>
               </TextField>
             </Grid>
           </Grid>

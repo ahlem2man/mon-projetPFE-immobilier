@@ -261,12 +261,12 @@ const Properties = () => {
             <Grid container spacing={3}>
               {properties.length > 0 ? (
                 properties.map((property) => (
-                  <Grid item key={property._id} xs={12} sm={6} md={4}>
+                  <Grid key={property._id} size={{ xs: 12, sm: 6, md: 4 }}>
                     <PropertyCard property={property} />
                   </Grid>
                 ))
               ) : (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Box sx={{ textAlign: 'center', py: 6, bgcolor: '#f8f9fa', borderRadius: 2 }}>
                     <Typography variant="h6" color="textSecondary">
                       Aucune propriété ne correspond à vos critères.

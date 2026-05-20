@@ -1,19 +1,33 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
-  // Celui qui paye (Locataire ou Agence)
+  // Celui qui paye (Locataire)
   userId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User', 
     required: true 
   },
-  amount: { type: Number, required: true },
-  currency: { type: String, default: 'EUR' }, // Fixé sur l'Euro
   
-  // Type de paiement pour les statistiques (Point 3)
+  // Celui qui reçoit (Agence)
+  agencyId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Agency',
+    required: true 
+  },
+  
+  // Le bien concerné
+  propertyId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Property'
+  },
+  
+  amount: { type: Number, required: true },
+  currency: { type: String, default: 'EUR' },
+  
+  // Type de paiement
   type: { 
     type: String, 
-    enum: ['Loyer', 'Abonnement', 'Option Boost', 'Frais de vérification'],
+    enum: ['Loyer', 'Dépôt de Garantie', 'Frais de Dossier', 'Option Boost', 'Frais de vérification'],
     required: true 
   },
   
@@ -24,9 +38,12 @@ const paymentSchema = new mongoose.Schema({
     default: 'en attente' 
   },
   
-  // Pour le suivi et l'audit (Point 10)
-  reference: { type: String, unique: true }, // ID de transaction Stripe/PayPal
-  paymentMethod: { type: String }, // ex: "Carte Bancaire", "PayPal"
+  // Pour le suivi
+  reference: { type: String, unique: true },
+  paymentMethod: { type: String },
+  
+  // Commission de la plateforme HOMA (optionnel)
+  platformCommission: { type: Number, default: 0 },
   
 }, { timestamps: true });
 

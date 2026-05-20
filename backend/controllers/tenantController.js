@@ -1,6 +1,7 @@
 const Tenant = require('../models/Tenant');
 const calculateCompletion = require('../utils/calculateCompletion');
 const mongoose = require('mongoose');
+const { logUserActivity } = require('./activityLogController');
 
 //  Récupérer tous les dossiers locatifs (pour l'agence)
 exports.getAllTenantFiles = async (req, res) => {
@@ -306,7 +307,7 @@ exports.getTenantProfileByUserId = async (req, res) => {
     const objectId = new mongoose.Types.ObjectId(userId);
     console.log('[GET /profile/:userId] Recherche de tenant avec userId:', objectId);
     
-    const tenant = await Tenant.findOne({ userId: objectId });
+    const tenant = await Tenant.findOne({ userId: objectId }).populate('fileHistory.agencyId', 'name email');
     
     if (!tenant) {
       console.log('[GET /profile/:userId] Tenant NOT FOUND pour userId:', objectId);
@@ -403,6 +404,31 @@ exports.updateProfile = async (req, res) => {
       { new: true }
     );
     
+    // 📝 Log l'activité : Profil locataire mis à jour
+    await logUserActivity(
+      req.user.id,
+      'client',
+      'profile_updated',
+      'Tenant',
+      updatedTenant._id,
+      {
+        before: {
+          profession: tenant?.profession,
+          income: tenant?.income,
+          employmentType: tenant?.employmentType
+        },
+        after: {
+          profession: updateData.profession,
+          income: updateData.income,
+          employmentType: updateData.employmentType
+        },
+        reason: 'Mise à jour du profil locataire',
+        notes: `Complétude: ${completion}%`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
+
     console.log('[PUT /profile] Tenant après update:', updatedTenant);
     res.json(updatedTenant);
   } catch (error) {
@@ -846,6 +872,27 @@ exports.addFavorite = async (req, res) => {
       { new: true }
     );
 
+    //  Log l'activité : Propriété ajoutée aux favoris
+    await logUserActivity(
+      req.user.id || req.user._id,
+      'client',
+      'property_favorited',
+      'Property',
+      propertyId,
+      {
+        before: null,
+        after: {
+          propertyId: propertyId,
+          title: property.title,
+          favorited: true
+        },
+        reason: 'Ajout aux favoris',
+        notes: `Propriété: ${property.title}`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
+
     res.json({ 
       message: "Propriété ajoutée aux favoris !", 
       favorites: tenant.favoriteProperties,
@@ -870,6 +917,9 @@ exports.removeFavorite = async (req, res) => {
       return res.status(404).json({ message: "Tenant not found" });
     }
 
+    // Récupérer les infos de la propriété pour le log
+    const property = await Property.findById(propertyId);
+
     // Mettre à jour SIMULTANÉMENT le Tenant et la Property
     const [updatedTenant, updatedProperty] = await Promise.all([
       Tenant.findOneAndUpdate(
@@ -883,6 +933,26 @@ exports.removeFavorite = async (req, res) => {
         { new: true }
       )
     ]);
+
+    // 📝 Log l'activité : Propriété retirée des favoris
+    await logUserActivity(
+      req.user.id || req.user._id,
+      'client',
+      'property_unfavorited',
+      'Property',
+      propertyId,
+      {
+        before: {
+          propertyId: propertyId,
+          favorited: true
+        },
+        after: null,
+        reason: 'Suppression des favoris',
+        notes: `Propriété: ${property?.title || 'Unknown'}`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
 
     res.json({ 
       message: "Propriété supprimée des favoris !", 

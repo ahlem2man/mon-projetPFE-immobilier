@@ -23,26 +23,39 @@ const TenantFilesPage = () => {
   const [error, setError] = useState('');
   const token = localStorage.getItem('token');
 
-  // Récupérer TOUS les dossiers locatifs (indépendamment des candidatures)
+  // Récupérer les dossiers reçus par cette agence
   useEffect(() => {
     const fetchTenants = async () => {
       try {
         setLoading(true);
         
-        // Récupérer tous les dossiers locatifs
-        const tenantsRes = await axios.get(`${API_BASE_URL}/tenants/files/all`, {
+        // Récupérer uniquement les dossiers reçus par cette agence
+        const tenantsRes = await axios.get(`${API_BASE_URL}/tenants/received-dossiers`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
         console.log('Dossiers reçus:', tenantsRes.data);
         
         if (tenantsRes.data.data && Array.isArray(tenantsRes.data.data)) {
-          setTenants(tenantsRes.data.data);
+          // Transformer les données reçues pour compatibilité avec le reste de la page
+          const formattedTenants = tenantsRes.data.data.map(submission => ({
+            _id: submission._id,
+            userId: submission.tenantId?._id || submission.tenantId, // Extraire l'ID si c'est un objet populate
+            fullName: submission.profileSnapshot?.fullName,
+            email: submission.profileSnapshot?.email,
+            phone: submission.profileSnapshot?.phone,
+            profession: submission.profileSnapshot?.profession,
+            documents: submission.documents,
+            createdAt: submission.createdAt,
+            message: submission.message,
+            status: submission.submissions?.[0]?.status
+          }));
+          setTenants(formattedTenants);
           setError('');
         }
       } catch (err) {
         console.error('Erreur fetch dossiers:', err);
-        setError('Impossible de charger les dossiers des locataires');
+        setError('Impossible de charger les dossiers reçus');
       } finally {
         setLoading(false);
       }
@@ -65,8 +78,8 @@ const TenantFilesPage = () => {
   };
 
   const handleTenantClick = (tenant) => {
-    // Use the User ID in the URL so the backend profile route (/tenants/profile/:userId) works.
-    navigate(`/agency/tenant-files/${tenant.userId}`, { state: { tenant } });
+    // Use the User ID in the URL and pass submissionId in state
+    navigate(`/agency/tenant-files/${tenant.userId}`, { state: { tenant, submissionId: tenant._id } });
   };
 
   if (loading) {

@@ -7,6 +7,7 @@ const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto'); 
 const { protect: authMiddleware } = require('../middleware/auth');
 const { logActivity } = require('../controllers/activityLogController');
+const { notifyAdmins } = require('../controllers/notificationController');
 
 
 
@@ -34,6 +35,15 @@ router.post('/register', async (req, res) => {
       verificationToken: vToken 
     });
     await user.save();
+
+    // Notifier les admins si c'est une nouvelle agence
+    if (role === 'agency') {
+      await notifyAdmins(
+        `Nouvelle agence à vérifier: ${name} (${email})`,
+        '/dashboard-admin/users',
+        'status_change'
+      );
+    }
 
    
     const verifyUrl = `http://localhost:5173/verify-email/${vToken}`;

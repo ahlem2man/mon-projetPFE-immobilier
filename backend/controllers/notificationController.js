@@ -1,4 +1,5 @@
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // @desc    Obtenir les notifications de l'utilisateur connecté
 // @route   GET /api/notifications
@@ -44,5 +45,30 @@ exports.createNotification = async (recipientId, message, link, type = 'status_c
     return notification;
   } catch (error) {
     console.error('Erreur création notification:', error);
+  }
+};
+
+// @desc    Notifier tous les admins/superadmins
+// @access  Private
+exports.notifyAdmins = async (message, link = '', type = 'status_change') => {
+  try {
+    // Trouver tous les admins (et superadmins s'ils existent)
+    const admins = await User.find({ role: 'admin' }).select('_id');
+    
+    // Créer des notifications pour chacun
+    const notifications = await Promise.all(
+      admins.map(admin => 
+        Notification.create({
+          recipient: admin._id,
+          message,
+          link,
+          type
+        })
+      )
+    );
+    
+    return notifications;
+  } catch (error) {
+    console.error('Erreur création notifications admins:', error);
   }
 };

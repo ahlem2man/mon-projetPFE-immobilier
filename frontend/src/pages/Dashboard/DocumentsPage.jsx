@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, Paper, Button, Grid, 
   Container, IconButton, LinearProgress, Snackbar, Alert, 
-  FormControl, InputLabel, Select, MenuItem, FormControlLabel, Checkbox 
+  FormControl, InputLabel, Select, MenuItem, FormControlLabel, Checkbox, Dialog, DialogTitle, DialogContent, DialogActions 
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SendIcon from '@mui/icons-material/Send';
 import axios from 'axios';
 import API_BASE_URL from '../../config/api';
 
@@ -48,6 +49,13 @@ const DocumentsPage = () => {
     message: '',
     severity: 'success'
   });
+
+  // États pour l'envoi du dossier aux agences
+  const [agencies, setAgencies] = useState([]);
+  const [selectedAgencies, setSelectedAgencies] = useState([]);
+  const [loadingAgencies, setLoadingAgencies] = useState(false);
+  const [openAgenciesDialog, setOpenAgenciesDialog] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState('');
 
   // Charger le profil au démarrage (Étape 8)
   useEffect(() => {
@@ -93,6 +101,28 @@ const DocumentsPage = () => {
     };
     fetchProfile();
   }, []);
+
+  // Charger les agences quand le dialog s'ouvre
+  useEffect(() => {
+    if (openAgenciesDialog && agencies.length === 0) {
+      fetchAgencies();
+    }
+  }, [openAgenciesDialog]);
+
+  const fetchAgencies = async () => {
+    try {
+      setLoadingAgencies(true);
+      const res = await axios.get(`${API_BASE_URL}/tenants/agencies`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setAgencies(res.data.data || []);
+    } catch (err) {
+      console.error('Erreur chargement agences:', err);
+      showNotify('Impossible de charger les agences', 'error');
+    } finally {
+      setLoadingAgencies(false);
+    }
+  };
 
   const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
@@ -158,6 +188,12 @@ const DocumentsPage = () => {
     // Validation : au moins la pièce d'identité requise
     if (!documents.identityCard.file && !documents.identityCard.uploadedPath) {
       showNotify('La pièce d\'identité est obligatoire', 'warning');
+      return;
+    }
+
+    // Validation : au moins une agence sélectionnée
+    if (selectedAgencies.length === 0) {
+      showNotify('Veuillez sélectionner au moins une agence', 'warning');
       return;
     }
 
@@ -233,10 +269,58 @@ const DocumentsPage = () => {
         }
       }
 
-      showNotify(`✅ Dossier locatif envoyé ! Complétude: ${completion}%`, 'success');
+      // ÉTAPE 3 : Envoyer le dossier aux agences sélectionnées
+      await axios.post(
+        `${API_BASE_URL}/tenants/submit-dossier`,
+        {
+          agencyIds: selectedAgencies
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      showNotify(`Dossier envoyé à ${selectedAgencies.length} agence(s)! Complétude: ${completion}%`, 'success');
+      setOpenAgenciesDialog(false);
+      setSelectedAgencies([]);
     } catch (err) {
       console.error("Erreur détaillée :", err.response?.data);
       showNotify(err.response?.data?.message || "Erreur lors de l'envoi du dossier.", 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleToggleAgency = (agencyId) => {
+    setSelectedAgencies(prev => 
+      prev.includes(agencyId) 
+        ? prev.filter(id => id !== agencyId)
+        : [...prev, agencyId]
+    );
+  };
+
+  const handleSendDossierToAgencies = async () => {
+    if (selectedAgencies.length === 0) {
+      showNotify('Sélectionnez au moins une agence', 'warning');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const token = localStorage.getItem('token');
+      
+      const res = await axios.post(
+        `${API_BASE_URL}/tenants/submit-dossier`,
+        {
+          agencyIds: selectedAgencies
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      showNotify(` Dossier envoyé à ${selectedAgencies.length} agence(s)!`, 'success');
+      setOpenAgenciesDialog(false);
+      setSelectedAgencies([]);
+    } catch (err) {
+      console.error('Erreur envoi dossier:', err);
+      showNotify(err.response?.data?.message || 'Erreur lors de l\'envoi', 'error');
     } finally {
       setUploading(false);
     }
@@ -441,6 +525,49 @@ const DocumentsPage = () => {
 
       {uploading && <LinearProgress sx={{ mt: 4, borderRadius: 2 }} />}
 
+      {/* SECTION 3 : ENVOYER LE DOSSIER AUX AGENCES */}
+      <Paper 
+        sx={{ 
+          p: 4, 
+          mt: 5, 
+          mb: 5, 
+          borderRadius: '12px', 
+          border: '2px solid #2196f3',
+          bgcolor: '#e3f2fd'
+        }}
+      >
+        <Typography variant="h6" fontWeight="bold" color="#0a1930" gutterBottom sx={{ mb: 2 }}>
+          Envoyer votre dossier à des agences
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Une fois votre dossier complété, vous pouvez l'envoyer directement aux agences de votre choix. Elles pourront examiner votre profil et vous contacter pour des opportunités.
+        </Typography>
+        
+        <Button
+          variant="contained"
+          startIcon={<SendIcon />}
+          onClick={() => setOpenAgenciesDialog(true)}
+          disabled={completion < 100}
+          sx={{
+            bgcolor: '#2196f3',
+            px: 4,
+            py: 1.5,
+            textTransform: 'none',
+            fontSize: '1rem',
+            '&:hover': { bgcolor: '#1976d2' },
+            '&:disabled': { bgcolor: '#e0e0e0' }
+          }}
+        >
+          Sélectionner des agences
+        </Button>
+        
+        {completion < 100 && (
+          <Typography variant="caption" color="error" sx={{ display: 'block', mt: 2 }}>
+            Votre dossier doit être à 100% pour envoyer aux agences
+          </Typography>
+        )}
+      </Paper>
+
       <Box sx={{ mt: 5, textAlign: 'center' }}>
         <Button 
           variant="contained" 
@@ -473,6 +600,73 @@ const DocumentsPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* DIALOG SÉLECTION DES AGENCES */}
+      <Dialog open={openAgenciesDialog} onClose={() => setOpenAgenciesDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold', bgcolor: '#2196f3', color: 'white' }}>
+           Envoyer votre dossier aux agences
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 3 }}>
+          {loadingAgencies ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <Typography>Chargement des agences...</Typography>
+            </Box>
+          ) : agencies.length === 0 ? (
+            <Alert severity="info">Aucune agence disponible pour le moment</Alert>
+          ) : (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Sélectionnez une ou plusieurs agences pour envoyer votre dossier complet:
+              </Typography>
+              
+              {agencies.map(agency => (
+                <FormControlLabel
+                  key={agency._id}
+                  control={
+                    <Checkbox
+                      checked={selectedAgencies.includes(agency._id)}
+                      onChange={() => handleToggleAgency(agency._id)}
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography variant="body2" fontWeight="500">
+                        {agency.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {agency.email}
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ mb: 1, display: 'flex', alignItems: 'flex-start' }}
+                />
+              ))}
+
+              <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid #e0e0e0', textAlign: 'center' }}>
+                <Button
+                  onClick={handleSendDossierToAgencies}
+                  variant="contained"
+                  disabled={selectedAgencies.length === 0 || uploading}
+                  fullWidth
+                  sx={{
+                    bgcolor: '#0a1930',
+                    py: 2,
+                    fontWeight: 'bold',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    '&:hover': { bgcolor: '#1a2940' },
+                    '&:disabled': { bgcolor: '#e0e0e0' }
+                  }}
+                >
+                  {uploading ? 'Envoi en cours...' : 'VALIDER ET ENVOYER MON DOSSIER COMPLET'}
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 };

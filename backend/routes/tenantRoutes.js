@@ -3,6 +3,8 @@ const router = express.Router();
 const upload = require('../middleware/upload');
 const { protect, restrictTo } = require('../middleware/auth');
 const tenantController = require('../controllers/tenantController');
+const { getAllAgencies, submitDossierToAgencies, getMyDossierSubmissions, getReceivedDossiers, markDossierAsViewed, respondToDossier } = require('../controllers/dossierSubmissionController');
+const { getTenantPayments, initiatePayment, confirmPayment } = require('../controllers/paymentController');
 
 // ========== ROUTES AGENCE ==========
 router.get('/files/all', protect, restrictTo('agency'), tenantController.getAllTenantFiles);
@@ -45,5 +47,18 @@ router.get('/favorites', protect, tenantController.getFavorites);
 router.post('/favorites/:propertyId', protect, tenantController.addFavorite);
 router.delete('/favorites/:propertyId', protect, tenantController.removeFavorite);
 router.get('/favorites/check/:propertyId', protect, tenantController.checkFavorite);
+
+// ========== PAIEMENTS ==========
+router.get('/payments', protect, getTenantPayments);
+router.post('/payments/initiate', protect, initiatePayment);
+router.patch('/payments/:paymentId/confirm', protect, confirmPayment);
+
+// ========== ENVOI DOSSIER AUX AGENCES ==========
+router.get('/agencies', protect, getAllAgencies);
+router.post('/submit-dossier', protect, restrictTo('tenant'), submitDossierToAgencies);
+router.get('/dossier-submissions', protect, restrictTo('tenant'), getMyDossierSubmissions);
+router.get('/received-dossiers', protect, restrictTo('agency'), getReceivedDossiers);
+router.patch('/dossier-submission/:submissionId/viewed', protect, restrictTo('agency'), markDossierAsViewed);
+router.patch('/dossier-submission/:submissionId/respond', protect, restrictTo('agency'), respondToDossier);
 
 module.exports = router;

@@ -2,6 +2,8 @@ const Agency = require('../models/Agency');
 const Property = require('../models/Property');
 const Request = require('../models/Request');
 const Matching = require('../models/Matching');
+const { logUserActivity } = require('./activityLogController');
+const { notifyAdmins } = require('./notificationController');
 
 // 1. Récupérer le profil de l'agence connectée AVEC statistiques
 exports.getAgencyProfile = async (req, res) => {
@@ -12,7 +14,7 @@ exports.getAgencyProfile = async (req, res) => {
     // Calculer les statistiques
     const properties = await Property.find({ owner: req.user.id });
     
-    const activeAds = properties.filter(p => p.status === 'active').length;
+    const activeAds = properties.filter(p => p.status === 'disponible').length;
     const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0);
     
     const pendingRequests = await Request.countDocuments({ 
@@ -41,11 +43,46 @@ exports.getAgencyProfile = async (req, res) => {
 exports.updateAgencyProfile = async (req, res) => {
   try {
     const { agencyName, licenseNumber, address, phoneNumber, description, website } = req.body;
+    
+    // Récupérer l'état AVANT
+    const agencyBefore = await Agency.findOne({ userId: req.user.id });
+    const stateBefore = agencyBefore ? {
+      agencyName: agencyBefore.agencyName,
+      address: agencyBefore.address,
+      phoneNumber: agencyBefore.phoneNumber,
+      description: agencyBefore.description,
+      website: agencyBefore.website
+    } : {};
+
     const agency = await Agency.findOneAndUpdate(
       { userId: req.user.id },
       { agencyName, licenseNumber, address, phoneNumber, description, website },
       { new: true, upsert: true, runValidators: true }
     );
+
+    // 📝 Log l'activité : Profil agence modifié
+    await logUserActivity(
+      req.user.id,
+      'agency',
+      'agency_profile_updated',
+      'Agency',
+      agency._id,
+      {
+        before: stateBefore,
+        after: {
+          agencyName: agency.agencyName,
+          address: agency.address,
+          phoneNumber: agency.phoneNumber,
+          description: agency.description,
+          website: agency.website
+        },
+        reason: 'Mise à jour du profil agence',
+        notes: `Agence: ${agency.agencyName}`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
+
     res.status(200).json({ message: "Profil mis à jour", data: agency });
   } catch (error) {
     res.status(400).json({ message: "Erreur mise à jour", error: error.message });
@@ -118,6 +155,16 @@ exports.uploadVerificationDocs = async (req, res) => {
       },
       { new: true }
     );
+    // Notifier les admins qu'un document a été uploadé
+    try {
+      await notifyAdmins(
+        `Nouvelle pièce soumise pour vérification par l'agence ${agency.agencyName || req.user.id}`,
+        '/dashboard-admin/documents',
+        'status_change'
+      );
+    } catch (e) {
+      console.error('Erreur notification admins upload doc:', e);
+    }
     
     res.status(200).json({ 
       message: "Document téléchargé avec succès", 
@@ -138,6 +185,16 @@ exports.submitForVerification = async (req, res) => {
       { verificationStatus: 'pending' }, 
       { new: true }
     );
+    // Notifier les admins qu'une agence a soumis son dossier pour vérification
+    try {
+      await notifyAdmins(
+        `L'agence ${agency.agencyName || req.user.id} a soumis son dossier pour vérification.`,
+        '/dashboard-admin/documents',
+        'status_change'
+      );
+    } catch (e) {
+      console.error('Erreur notification admins submit verification:', e);
+    }
     res.status(200).json({ message: "Demande envoyée", status: agency.verificationStatus });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -147,7 +204,20 @@ exports.submitForVerification = async (req, res) => {
 // 5. Validation par l'Admin
 exports.adminVerifyAgency = async (req, res) => {
   try {
-    const { agencyId, status } = req.body; 
+    const { agencyId, status } = req.body;
+    
+    // Si on essaie d'approuver, vérifier qu'il y a au moins un document
+    if (status === 'approved') {
+      const agency = await Agency.findById(agencyId);
+      const hasValidDoc = agency && agency.verificationDocs && agency.verificationDocs.length > 0;
+      
+      if (!hasValidDoc) {
+        return res.status(400).json({ 
+          message: "L'agence doit avoir au moins un document de vérification (Kbis, Carte Pro ou Attestation Assurance) pour être vérifiée." 
+        });
+      }
+    }
+    
     const agency = await Agency.findByIdAndUpdate(
       agencyId,
       { 

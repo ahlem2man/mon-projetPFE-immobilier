@@ -52,7 +52,7 @@ const AgencyApplications = () => {
     accepted: applications.filter(a => a.status?.toLowerCase() === 'acceptée').length
   };
 
-  // ✅ PLUS de filtrage client-side - le backend le fait déjà!
+  //  PLUS de filtrage client-side - le backend le fait déjà!
   // On utilise directement 'applications' qui sont déjà filtrées par le serveur
   const filteredApps = applications;
 
@@ -61,7 +61,7 @@ const AgencyApplications = () => {
     setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  // ✨ NOUVEAU: Actions groupées
+  //  NOUVEAU: Actions groupées
   const handleBulkUpdate = async () => {
     if (!bulkStatus || selected.length === 0) {
       alert('Veuillez sélectionner un statut et au moins une candidature');
@@ -75,7 +75,7 @@ const AgencyApplications = () => {
         { requestIds: selected, status: bulkStatus },
         { headers: { Authorization: `Bearer ${token}` }}
       );
-      alert(`✅ ${res.data.data.updated} dossier(s) mis à jour en ${bulkStatus}`);
+      alert(` ${res.data.data.updated} dossier(s) mis à jour en ${bulkStatus}`);
       setSelected([]);
       setBulkStatus('');
       fetchApplications(filterStatus, filterStartDate, filterEndDate);
@@ -100,7 +100,7 @@ const AgencyApplications = () => {
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', py: 4, px: 2 }}>
       
-      {/* 📊 SECTION STATISTIQUES (Point 9) */}
+      {/*  SECTION STATISTIQUES (Point 9) */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#E8EAF6' }}>
@@ -127,7 +127,7 @@ const AgencyApplications = () => {
           Gestion des Candidatures
         </Typography>
 
-        {/* 🔍 FILTRAGE (Point 5) */}
+        {/*  FILTRAGE (Point 5) */}
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
             select
@@ -142,7 +142,7 @@ const AgencyApplications = () => {
             ))}
           </TextField>
 
-          {/* ✨ NOUVEAU: Filtars de date */}
+          {/*  NOUVEAU: Filtars de date */}
           <TextField
             type="date"
             size="small"
@@ -164,7 +164,7 @@ const AgencyApplications = () => {
         </Box>
       </Box>
 
-      {/* ⚡ ACTIONS GROUPÉES (Point 10) */}
+      {/*  ACTIONS GROUPÉES (Point 10) */}
       {selected.length > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>

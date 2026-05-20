@@ -1,6 +1,41 @@
 const ActivityLog = require('../models/ActivityLog');
 
-// Log une activité admin
+// Log une activité d'un CLIENT ou AGENCE - Fonction générique
+exports.logUserActivity = async (
+  performerId,           // ID de la personne (client) ou agence
+  performerType,         // 'client' ou 'agency'
+  action,
+  targetType,
+  targetId,
+  details = {},
+  ipAddress = '',
+  userAgent = ''
+) => {
+  try {
+    const logData = {
+      action,
+      targetType,
+      targetId,
+      details,
+      ipAddress,
+      userAgent,
+      success: true,
+      performedByType: performerType
+    };
+
+    if (performerType === 'client') {
+      logData.userId = performerId;
+    } else if (performerType === 'agency') {
+      logData.agencyId = performerId;
+    }
+
+    await ActivityLog.create(logData);
+  } catch (err) {
+    console.error('Erreur lors du logging d\'activité utilisateur:', err);
+  }
+};
+
+// Log une activité ADMIN (format original pour compatibilité)
 exports.logActivity = async (adminId, action, targetType, targetId, details = {}, ipAddress = '', userAgent = '') => {
   try {
     await ActivityLog.create({
@@ -11,7 +46,8 @@ exports.logActivity = async (adminId, action, targetType, targetId, details = {}
       details,
       ipAddress,
       userAgent,
-      success: true
+      success: true,
+      performedByType: 'admin'
     });
   } catch (err) {
     console.error('Erreur lors du logging d\'activité:', err);
@@ -21,12 +57,12 @@ exports.logActivity = async (adminId, action, targetType, targetId, details = {}
 // Récupérer les logs d'activité avec filtres
 exports.getActivityLogs = async (req, res) => {
   try {
-    const { action, adminId, targetId, startDate, endDate, limit = 50, page = 1 } = req.query;
+    const { action, targetId, startDate, endDate, limit = 50, page = 1 } = req.query;
     
     let query = {};
     
+    // Admin voit TOUS les logs : admin + client + agence
     if (action) query.action = action;
-    if (adminId) query.adminId = adminId;
     if (targetId) query.targetId = targetId;
     
     if (startDate || endDate) {
@@ -40,6 +76,8 @@ exports.getActivityLogs = async (req, res) => {
     
     const logs = await ActivityLog.find(query)
       .populate('adminId', 'name email')
+      .populate('userId', 'fullName email')
+      .populate('agencyId', 'agencyName email')
       .sort('-createdAt')
       .limit(parseInt(limit))
       .skip(skip);
@@ -64,7 +102,10 @@ exports.getAdminActivityReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
-    let match = {};
+    let match = {
+      adminId: req.user.id  // SÉCURITÉ: Admin voit seulement ses stats
+    };
+    
     if (startDate || endDate) {
       match.createdAt = {};
       if (startDate) match.createdAt.$gte = new Date(startDate);
@@ -104,7 +145,8 @@ exports.getAdminActivityReport = async (req, res) => {
 // Exporter les logs en CSV
 exports.exportActivityLogsCSV = async (req, res) => {
   try {
-    const logs = await ActivityLog.find()
+    // SÉCURITÉ: Exporter seulement les logs de l'admin connecté
+    const logs = await ActivityLog.find({ adminId: req.user.id })
       .populate('adminId', 'name email')
       .sort('-createdAt');
 

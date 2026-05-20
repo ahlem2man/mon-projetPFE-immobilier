@@ -29,6 +29,7 @@ import FavoritesPage from './pages/Dashboard/FavoritesPage';
 import MyApplications from './pages/MyApplications';
 import DetailedApplication from './pages/DetailedApplication';
 import RecommendationsPage from './pages/Dashboard/RecommendationsPage';
+import PaymentsPage from './pages/Dashboard/PaymentsPage';
 import AgencyDashboardLayout from './pages/DashbordAgency/AgencyDashboardLayout';
 import AgencyOverview from './pages/DashbordAgency/AgencyOverview';
 import AgencyProfilePage from './pages/DashbordAgency/AgencyProfilePage';
@@ -44,6 +45,8 @@ import ApplicationDetail from './pages/DashbordAgency/ApplicationDetail';
 import PropertyAnalyticsPage from './pages/DashbordAgency/PropertyAnalyticsPage';
 import TenantFilesPage from './pages/DashbordAgency/TenantFilesPage';
 import TenantFilesDetailPage from './pages/DashbordAgency/TenantFilesDetailPage';
+import AgencyRequestsReport from './pages/DashbordAgency/AgencyRequestsReport';
+import PaymentsReceivedPage from './pages/DashbordAgency/PaymentsReceivedPage';
 import GlobalAnalyticsPage from './pages/Dashboard/GlobalAnalyticsPage';
 import DashboardHomePage from './pages/Dashboard/DashboardHomePage';
 import AdminDashboardLayout from './pages/DashboardAdmin/AdminDashboardLayout';
@@ -55,6 +58,7 @@ import DocumentVerification from './pages/DashboardAdmin/DocumentVerification';
 import PaymentHistory from './pages/DashboardAdmin/PaymentHistory';
 import ActivityLogs from './pages/DashboardAdmin/ActivityLogs';
 import PaymentsList from './pages/DashboardAdmin/PaymentsList';
+import PlatformSettingsPage from './pages/DashboardAdmin/PlatformSettingsPage';
 
 function App() {
   return (
@@ -93,6 +97,7 @@ function App() {
                   <Route path="favorites" element={<FavoritesPage />} />
                   <Route path="applications" element={<MyApplications />} />
                   <Route path="applications/:requestId" element={<DetailedApplication />} />
+                  <Route path="payments" element={<PaymentsPage />} />
                 </Route>
                 
 
@@ -127,8 +132,10 @@ function App() {
                   <Route path="analytics" element={<GlobalAnalyticsPage />} />
                   <Route path="applications" element={<AgencyApplications />} />
                   <Route path="applications/:id" element={<ApplicationDetail />} />
+                  <Route path="requests-report" element={<AgencyRequestsReport />} />
                   <Route path="tenant-files" element={<TenantFilesPage />} />
                   <Route path="tenant-files/:tenantId" element={<TenantFilesDetailPage />} />
+                  <Route path="payments-received" element={<PaymentsReceivedPage />} />
                   <Route path="properties" element={<PropertiesList />} />
                   <Route path="properties/add" element={<AddPropertyStepper />} />
                   <Route path="properties/:id/edit" element={<PropertyEditPage />} />
@@ -152,6 +159,7 @@ function App() {
                   <Route path="payments" element={<PaymentsList />} />
                   <Route path="history" element={<PaymentHistory />} />
                   <Route path="logs" element={<ActivityLogs />} />
+                  <Route path="settings" element={<PlatformSettingsPage />} />
                 </Route>
               </Routes>
             </Box>

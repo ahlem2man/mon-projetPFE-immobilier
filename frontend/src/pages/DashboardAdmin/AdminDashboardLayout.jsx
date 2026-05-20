@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Box, Drawer, AppBar, Toolbar, List, Typography, Divider, 
+  Box, Drawer, List, Typography, Divider, 
   ListItem, ListItemButton, ListItemIcon, ListItemText, Chip 
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -10,7 +10,6 @@ import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import GavelIcon from '@mui/icons-material/Gavel';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
-import ErrorIcon from '@mui/icons-material/Error';
 import PaymentIcon from '@mui/icons-material/Payment';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import HistoryIcon from '@mui/icons-material/History';
@@ -32,7 +31,6 @@ const AdminDashboardLayout = () => {
     { text: 'Paiements', icon: <PaymentIcon />, path: '/dashboard-admin/payments' },
     { text: 'Historique Paiements', icon: <HistoryIcon />, path: '/dashboard-admin/history' },
     { text: 'Journal d\'Activité', icon: <AssignmentIcon />, path: '/dashboard-admin/logs' },
-    { text: 'Signalements', icon: <ErrorIcon />, path: '/dashboard-admin/reports' },
     { text: 'Paramètres', icon: <SettingsIcon />, path: '/dashboard-admin/settings' },
   ];
 
@@ -123,22 +121,6 @@ const AdminDashboardLayout = () => {
 
       {/* CONTENU PRINCIPAL */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <AppBar 
-          position="static" 
-          elevation={0} 
-          sx={{ 
-            bgcolor: 'transparent', 
-            color: 'text.primary', 
-            mb: 3 
-          }}
-        >
-          <Toolbar sx={{ justifyContent: 'space-between', px: 0 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1A237E' }}>
-              Console d'Administration
-            </Typography>
-          </Toolbar>
-        </AppBar>
-
         {/* Outlet pour les pages enfants */}
         <Box sx={{ bgcolor: '#ffffff', borderRadius: 2, p: 3 }}>
           <Outlet />

@@ -14,7 +14,9 @@ const {
   getPendingDocuments,
   verifyDocument,
   getGlobalStats,
-  getGrowthStats
+  getGrowthStats,
+  getPropertiesGrowth,
+  getRevenueGrowth
 } = require('../controllers/adminController');
 
 // Import des contrôleurs paiements
@@ -26,6 +28,18 @@ const {
   getAdminActivityReport, 
   exportActivityLogsCSV 
 } = require('../controllers/activityLogController');
+
+// Import des contrôleurs settings
+const { 
+  getSettings, 
+  updateSettings, 
+  getSecuritySettings, 
+  getMaintenanceStatus, 
+  toggleMaintenanceMode 
+} = require('../controllers/settingsController');
+
+// Import du contrôleur notifications
+const { getNotifications, markAsRead } = require('../controllers/notificationController');
 // Toutes les routes ici nécessitent d'être connecté ET d'être admin
 router.use(protect);
 router.use(restrictTo('admin', 'superadmin'));
@@ -57,10 +71,22 @@ router.patch('/documents/:id/verify', verifyDocument);
 // --- ANALYTICS (Sprint 11 - Étape 3) ---
 router.get('/stats/global', getGlobalStats);
 router.get('/stats/growth', getGrowthStats);
+router.get('/stats/properties-growth', getPropertiesGrowth);
+router.get('/stats/revenue-growth', getRevenueGrowth);
 
 // --- AUDIT & ACTIVITY LOGS (Sprint 11 - Étape 4) ---
 router.get('/logs/activity', getActivityLogs);
 router.get('/logs/report', getAdminActivityReport);
 router.get('/logs/export-csv', exportActivityLogsCSV);
+
+// --- PLATFORM SETTINGS (Sprint 11 - Étape 5) ---
+router.get('/settings', getSettings);
+router.put('/settings', updateSettings);
+router.get('/settings/maintenance/status', getMaintenanceStatus);
+router.put('/settings/maintenance/toggle', toggleMaintenanceMode);
+
+// --- NOTIFICATIONS ---
+router.get('/notifications', getNotifications);
+router.patch('/notifications/:id/read', markAsRead);
 
 module.exports = router;

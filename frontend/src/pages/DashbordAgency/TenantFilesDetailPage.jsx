@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, Grid, CircularProgress, Alert, Button,
@@ -16,10 +16,12 @@ import DownloadIcon from '@mui/icons-material/Download';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import axios from 'axios';
 import API_BASE_URL from '../../config/api';
+import { AuthContext } from '../../context/AuthContext';
 
 const TenantFilesDetailPage = () => {
   const { tenantId } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -291,6 +293,19 @@ const TenantFilesDetailPage = () => {
     return grouped;
   };
 
+  // Filtrer l'historique pour n'afficher que celui de l'agence connectée
+  const getFilteredHistory = () => {
+    if (!tenant?.fileHistory || tenant.fileHistory.length === 0) {
+      return [];
+    }
+    
+    return tenant.fileHistory.filter(entry => {
+      // Gérer les deux cas: agencyId peut être un string (ID) ou un objet (popuplé)
+      const entryAgencyId = entry.agencyId?._id || entry.agencyId;
+      return entryAgencyId === user?.id;
+    });
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '400px', gap: 2 }}>
@@ -475,7 +490,7 @@ const TenantFilesDetailPage = () => {
         <Card sx={{ mt: 4, borderRadius: 2 }}>
           <CardContent>
             <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-              📋 Informations Professionnelles
+              Informations Professionnelles
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -506,7 +521,7 @@ const TenantFilesDetailPage = () => {
       <Card sx={{ mt: 4, borderRadius: 2 }}>
         <CardContent>
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
-            ⚙️ Actions et Notes
+             Actions et Notes
           </Typography>
 
           {/* Statut actuel */}
@@ -599,40 +614,54 @@ const TenantFilesDetailPage = () => {
           {tenant?.fileHistory && tenant.fileHistory.length > 0 && (
             <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e0e0e0' }}>
               <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 'bold', display: 'block', mb: 2 }}>
-                📜 Historique
+                 Historique de cette agence
               </Typography>
-              <Stack spacing={1}>
-                {tenant.fileHistory.map((entry, idx) => (
-                  <Box key={idx} sx={{
-                    p: 1.5,
-                    bgcolor: '#f5f5f5',
-                    borderRadius: 1,
-                    fontSize: '0.85rem'
-                  }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.5 }}>
-                      <Chip
-                        label={entry.status}
-                        size="small"
-                        color={
-                          entry.status === 'verified' ? 'success' :
-                          entry.status === 'rejected' ? 'error' :
-                          entry.status === 'info_required' ? 'warning' :
-                          'default'
-                        }
-                        variant="outlined"
-                      />
-                      <Typography variant="caption" color="textSecondary">
-                        {new Date(entry.createdAt).toLocaleString('fr-FR')}
-                      </Typography>
-                    </Box>
-                    {entry.note && (
-                      <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>
-                         {entry.note}
-                      </Typography>
-                    )}
-                  </Box>
-                ))}
-              </Stack>
+              {(() => {
+                const filteredHistory = getFilteredHistory();
+                
+                if (filteredHistory.length === 0) {
+                  return (
+                    <Typography variant="body2" color="textSecondary">
+                      Aucune action enregistrée pour votre agence
+                    </Typography>
+                  );
+                }
+                
+                return (
+                  <Stack spacing={1}>
+                    {filteredHistory.map((entry, idx) => (
+                      <Box key={idx} sx={{
+                        p: 1.5,
+                        bgcolor: '#f5f5f5',
+                        borderRadius: 1,
+                        fontSize: '0.85rem'
+                      }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.5 }}>
+                          <Chip
+                            label={entry.status}
+                            size="small"
+                            color={
+                              entry.status === 'verified' ? 'success' :
+                              entry.status === 'rejected' ? 'error' :
+                              entry.status === 'info_required' ? 'warning' :
+                              'default'
+                            }
+                            variant="outlined"
+                          />
+                          <Typography variant="caption" color="textSecondary">
+                            {new Date(entry.createdAt).toLocaleString('fr-FR')}
+                          </Typography>
+                        </Box>
+                        {entry.note && (
+                          <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>
+                             {entry.note}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Stack>
+                );
+              })()}
             </Box>
           )}
         </CardContent>

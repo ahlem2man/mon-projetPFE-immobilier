@@ -3,6 +3,7 @@ const Request = require('../models/Request');
 const Property = require('../models/Property');
 const { createNotification } = require('./notificationController');
 const { sendApplicationStatusEmail } = require('../utils/emailService');
+const { logUserActivity } = require('./activityLogController');
 
 
 exports.submitRequest = async (req, res) => {
@@ -105,6 +106,27 @@ exports.submitRequest = async (req, res) => {
     
     // Récupérer le document créé
     const newRequest = await Request.findById(result.insertedId);
+
+    // 📝 Log l'activité : Candidature créée
+    await logUserActivity(
+      tenantId,
+      'client',
+      'request_created',
+      'Request',
+      result.insertedId,
+      {
+        before: null,
+        after: {
+          propertyId: propertyId,
+          status: 'En attente',
+          message: message || ''
+        },
+        reason: 'Soumission de candidature',
+        notes: `Candidature pour la propriété: ${property.title}`
+      },
+      req.ip,
+      req.get('user-agent')
+    );
 
     //  Notifier l'agence/propriétaire qu'une nouvelle candidature a été soumise
     try {

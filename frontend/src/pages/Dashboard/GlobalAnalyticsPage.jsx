@@ -100,7 +100,7 @@ export default function GlobalAnalyticsPage() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', color: '#333' }}>
-        📊 Tableau de Bord Global des Analytics
+        Tableau de Bord Global des Analytics
       </Typography>
 
       {/* Cartes KPI */}

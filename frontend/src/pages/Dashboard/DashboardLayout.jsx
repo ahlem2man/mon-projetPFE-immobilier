@@ -1,5 +1,6 @@
 import { Box, List, ListItem, ListItemIcon, ListItemText, Drawer, AppBar, Toolbar, Typography, LinearProgress, Stack, Paper } from '@mui/material';
 import { Person, Settings, Description, Favorite, Search, Home } from '@mui/icons-material';
+import PaymentIcon from '@mui/icons-material/Payment';
 import { Link, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -35,6 +36,7 @@ export default function DashboardLayout() {
     { text: 'Recherches', icon: <Search />, path: '/dashboard/searches' },
     { text: 'Mes Favoris', icon: <Favorite />, path: '/dashboard/favorites' },
     { text: 'Mes Candidatures', icon: <AssignmentIcon />, path: '/dashboard/applications' },
+    { text: 'Mes Paiements', icon: <PaymentIcon />, path: '/dashboard/payments' },
     { text: 'Recommandations', icon: <AssignmentIcon />, path: '/dashboard/recommendations' },
   ];
 

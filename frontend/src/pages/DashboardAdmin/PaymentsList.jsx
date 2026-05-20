@@ -8,23 +8,29 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import axios from 'axios';
 import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
 
-const PaymentsList = () => {
+const PaymentsList = ({ customData }) => {
   const [payments, setPayments] = useState([]);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/admin/payments', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setPayments(res.data.data);
-      } catch (err) {
-        console.error("Erreur chargement paiements", err);
-      }
-    };
-    fetchPayments();
-  }, [token]);
+    // Si des données filtrées sont passées, les utiliser
+    if (customData) {
+      setPayments(customData);
+    } else {
+      // Sinon, charger tous les paiements
+      const fetchPayments = async () => {
+        try {
+          const res = await axios.get('http://localhost:5000/api/admin/payments', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setPayments(res.data.data);
+        } catch (err) {
+          console.error("Erreur chargement paiements", err);
+        }
+      };
+      fetchPayments();
+    }
+  }, [customData, token]);
 
   return (
     <Box sx={{ mt: 4 }}>

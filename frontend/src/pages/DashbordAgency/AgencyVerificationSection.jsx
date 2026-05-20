@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { 
   Box, Typography, Button, Card, Stack, 
   MenuItem, TextField, LinearProgress, Alert 
@@ -11,9 +11,18 @@ import API_BASE_URL from '../../config/api';
 const AgencyVerificationSection = () => {
   const { user } = useContext(AuthContext);
   const [file, setFile] = useState(null);
-  const [docType, setDocType] = useState('Kbis');
+  const [docType, setDocType] = useState(() => {
+    // Charger depuis localStorage si disponible
+    const saved = localStorage.getItem('selectedDocType');
+    return saved || 'Kbis';
+  });
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error', msg: '' }
+
+  // Sauvegarder le docType sélectionné
+  useEffect(() => {
+    localStorage.setItem('selectedDocType', docType);
+  }, [docType]);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
