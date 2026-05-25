@@ -105,7 +105,7 @@ export default function GlobalAnalyticsPage() {
 
       {/* Cartes KPI */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ backgroundColor: '#E8F5E9', borderLeft: '4px solid #4CAF50' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -118,7 +118,7 @@ export default function GlobalAnalyticsPage() {
           </Card>
         </Grid>
 
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ backgroundColor: '#E3F2FD', borderLeft: '4px solid #2196F3' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -131,7 +131,7 @@ export default function GlobalAnalyticsPage() {
           </Card>
         </Grid>
 
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ backgroundColor: '#FCE4EC', borderLeft: '4px solid #E91E63' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -144,7 +144,7 @@ export default function GlobalAnalyticsPage() {
           </Card>
         </Grid>
 
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ backgroundColor: '#FFF3E0', borderLeft: '4px solid #FF9800' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -161,7 +161,7 @@ export default function GlobalAnalyticsPage() {
       {/* Graphiques */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Pie Chart - Statut des propriétés */}
-        <Grid item size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -194,7 +194,7 @@ export default function GlobalAnalyticsPage() {
         </Grid>
 
         {/* Bar Chart - Top 10 propriétés par vues */}
-        <Grid item size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>

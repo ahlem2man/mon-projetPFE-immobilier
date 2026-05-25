@@ -36,7 +36,7 @@ export default function About() {
 
           <Grid container spacing={3}>
             {/* Pack Essentiel */}
-            <Grid item xs={12} md={4}>
+            <Grid sx={{ width: { xs: '100%', md: '33.33%' } }}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
                   <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#333' }}>
@@ -58,7 +58,7 @@ export default function About() {
             </Grid>
 
             {/* Pack Confort */}
-            <Grid item xs={12} md={4}>
+            <Grid sx={{ width: { xs: '100%', md: '33.33%' } }}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
                   <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#333' }}>
@@ -80,7 +80,7 @@ export default function About() {
             </Grid>
 
             {/* Pack Premium */}
-            <Grid item xs={12} md={4}>
+            <Grid sx={{ width: { xs: '100%', md: '33.33%' } }}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
                   <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#333' }}>
@@ -110,25 +110,25 @@ export default function About() {
           Pourquoi choisir HOMA ?
         </Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
             <Typography variant="body2" sx={{ color: '#666', display: 'flex', alignItems: 'flex-start', gap: 2 }}>
               <CheckCircleIcon sx={{ color: '#00bcd4', flexShrink: 0, mt: 0.5 }} /> 
               <span>Nous défendons votre dossier auprès des agences et propriétaires en les contactant directement pour maximiser vos chances</span>
             </Typography>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
             <Typography variant="body2" sx={{ color: '#666', display: 'flex', alignItems: 'flex-start', gap: 2 }}>
               <CheckCircleIcon sx={{ color: '#00bcd4', flexShrink: 0, mt: 0.5 }} /> 
               <span>Un suivi sur mesure, jusqu'à l'emménagement</span>
             </Typography>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
             <Typography variant="body2" sx={{ color: '#666', display: 'flex', alignItems: 'flex-start', gap: 2 }}>
               <CheckCircleIcon sx={{ color: '#00bcd4', flexShrink: 0, mt: 0.5 }} /> 
               <span>Logements issus de notre réseau de partenaires</span>
             </Typography>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
             <Typography variant="body2" sx={{ color: '#666', display: 'flex', alignItems: 'flex-start', gap: 2 }}>
               <CheckCircleIcon sx={{ color: '#00bcd4', flexShrink: 0, mt: 0.5 }} /> 
               <span>Accompagnement renforcé et personnalisé</span>

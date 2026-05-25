@@ -23,16 +23,16 @@ const StatCard = ({ title, value, icon, color }) => (
 const AdminStatsCards = ({ stats }) => {
   return (
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
         <StatCard title="Revenus Totaux" value={`${stats.revenue.total} €`} icon={<EuroIcon />} color="#2e7d32" />
       </Grid>
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
         <StatCard title="Utilisateurs" value={stats.users.total} icon={<PeopleIcon />} color="#1976d2" />
       </Grid>
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
         <StatCard title="Annonces Actives" value={stats.properties.active} icon={<HomeIcon />} color="#ed6c02" />
       </Grid>
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
         <StatCard title="Demandes" value={stats.applications.total} icon={<AssignmentIcon />} color="#9c27b0" />
       </Grid>
     </Grid>

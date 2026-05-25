@@ -35,8 +35,6 @@ import AgencyOverview from './pages/DashbordAgency/AgencyOverview';
 import AgencyProfilePage from './pages/DashbordAgency/AgencyProfilePage';
 import AgencyVerificationSection from './pages/DashbordAgency/AgencyVerificationSection';
 import AgencySettings from './pages/DashbordAgency/AgencySettings';
-import AgencyReviews from './pages/DashbordAgency/AgencyReviews';
-import AgencySubscriptions from './pages/DashbordAgency/AgencySubscriptions';
 import PropertiesList from './pages/DashbordAgency/PropertiesList';
 import AddPropertyStepper from './pages/DashbordAgency/AddPropertyStepper';
 import PropertyEditPage from './pages/DashbordAgency/PropertyEditPage';
@@ -125,10 +123,8 @@ function App() {
                   <Route index element={<AgencyOverview />} />
                   <Route path="dashboard" element={<AgencyOverview />} />
                   <Route path="profile" element={<AgencyProfilePage />} />
-                  <Route path="subscriptions" element={<AgencySubscriptions />} />
                   <Route path="verification" element={<AgencyVerificationSection />} />
                   <Route path="settings" element={<AgencySettings />} />
-                  <Route path="reviews" element={<AgencyReviews />} />
                   <Route path="analytics" element={<GlobalAnalyticsPage />} />
                   <Route path="applications" element={<AgencyApplications />} />
                   <Route path="applications/:id" element={<ApplicationDetail />} />

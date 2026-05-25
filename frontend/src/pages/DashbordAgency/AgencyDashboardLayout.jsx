@@ -11,8 +11,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
-import RateReviewIcon from '@mui/icons-material/RateReview';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
 import PaymentIcon from '@mui/icons-material/Payment';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -79,8 +77,6 @@ const AgencyDashboardLayout = () => {
     { text: 'Rapports Demandes', icon: <BarChartIcon />, path: '/agency/requests-report' },
     { text: 'Dossiers Locatifs', icon: <FolderIcon />, path: '/agency/tenant-files' },
     { text: 'Paiements Reçus', icon: <PaymentIcon />, path: '/agency/payments-received' },
-    { text: 'Avis Clients', icon: <RateReviewIcon />, path: '/agency/reviews' },
-    { text: 'Abonnements', icon: <CreditCardIcon />, path: '/agency/subscriptions' },
     { text: 'Vérification Profil', icon: <VerifiedUserIcon />, path: '/agency/verification' },
     { text: 'Paramètres', icon: <SettingsIcon />, path: '/agency/settings' },
   ];

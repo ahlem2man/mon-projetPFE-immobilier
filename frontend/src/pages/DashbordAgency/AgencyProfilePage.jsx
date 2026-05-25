@@ -169,17 +169,17 @@ const AgencyProfilePage = () => {
             <Grid size={{ xs: 12 }}>
               <TextField fullWidth label="Adresse Siège Social" name="address" value={formData.address} onChange={handleChange} variant="outlined" />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField fullWidth label="Téléphone" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} variant="outlined" />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField fullWidth label="Site Web" name="website" value={formData.website} onChange={handleChange} variant="outlined" />
             </Grid>
-            <Grid xs={12}>
+            <Grid sx={{ width: '100%' }}>
               <TextField fullWidth multiline rows={4} label="Description & Spécialités" name="description" value={formData.description} onChange={handleChange} variant="outlined" />
             </Grid>
 
-            <Grid xs={12}>
+            <Grid sx={{ width: '100%' }}>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                 <Button 
                   type="submit" 

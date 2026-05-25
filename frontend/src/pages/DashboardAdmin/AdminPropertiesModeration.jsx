@@ -139,7 +139,7 @@ const AdminPropertiesModeration = () => {
       {/* Grille d'annonces */}
       <Grid container spacing={2}>
         {filteredProperties.length === 0 && (
-          <Grid item xs={12}>
+          <Grid sx={{ width: '100%' }}>
             <Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
               {filterType === 'en attente' 
                 ? 'Aucune annonce en attente de modération.' 
@@ -149,7 +149,7 @@ const AdminPropertiesModeration = () => {
         )}
         
         {filteredProperties.map((prop) => (
-          <Grid item xs={12} sm={6} md={4} key={prop._id}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' } }} key={prop._id}>
             <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Box
                 sx={{
@@ -198,7 +198,7 @@ const AdminPropertiesModeration = () => {
                   {prop.price} TND • {prop.location}
                 </Typography>
                 <Typography variant="caption" display="block" color="textSecondary" sx={{ mb: 2 }}>
-                  Par: {prop.owner?.name || 'Inconnu'}
+                  Par: {prop.owner?.fullName || prop.owner?.name || prop.owner?.email || 'Inconnu'}
                 </Typography>
 
                 {/* Afficher les raisons de signalement si l'annonce est signalée */}

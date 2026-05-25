@@ -141,7 +141,7 @@ const AgencySettings = () => {
       <Grid container spacing={4}>
         
         {/* --- SECTION 1 : SÉCURITÉ --- */}
-        <Grid item xs={12}>
+        <Grid sx={{ width: '100%' }}>
           <Paper sx={{ p: 3, borderRadius: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <LockIcon sx={{ mr: 1, color: '#3F51B5' }} />
@@ -150,7 +150,7 @@ const AgencySettings = () => {
             <Divider sx={{ mb: 3 }} />
             <form onSubmit={handlePasswordChange}>
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid sx={{ width: '100%' }}>
                   <TextField 
                     fullWidth 
                     type="password" 
@@ -160,7 +160,7 @@ const AgencySettings = () => {
                     disabled={loading}
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
                   <TextField 
                     fullWidth 
                     type="password" 
@@ -170,7 +170,7 @@ const AgencySettings = () => {
                     disabled={loading}
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
                   <TextField 
                     fullWidth 
                     type="password" 
@@ -180,7 +180,7 @@ const AgencySettings = () => {
                     disabled={loading}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid sx={{ width: '100%' }}>
                   <Button 
                     variant="contained" 
                     type="submit" 
@@ -196,7 +196,7 @@ const AgencySettings = () => {
         </Grid>
 
         {/* --- SECTION 2 : NOTIFICATIONS --- */}
-        <Grid item xs={12}>
+        <Grid sx={{ width: '100%' }}>
           <Paper sx={{ p: 3, borderRadius: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <NotificationsIcon sx={{ mr: 1, color: '#3F51B5' }} />
@@ -229,7 +229,7 @@ const AgencySettings = () => {
         </Grid>
 
         {/* --- SECTION 3 : ZONE DE DANGER --- */}
-        <Grid item xs={12}>
+        <Grid sx={{ width: '100%' }}>
           <Card sx={{ border: '1px solid #ffcdd2', bgcolor: '#fffbfa' }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, color: '#d32f2f' }}>

@@ -158,7 +158,7 @@ export default function DashboardHomePage() {
 
       <Grid container spacing={2.5} sx={{ mb: 4 }}>
         {statCards.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
+          <Grid key={index} sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, px: 1.25 }}>
             <Card
               sx={{
                 background: stat.color,
@@ -217,7 +217,7 @@ export default function DashboardHomePage() {
       </Typography>
 
       <Grid container spacing={2.5}>
-        <Grid item xs={12} sm={6}>
+        <Grid sx={{ width: { xs: '100%', sm: '50%' }, px: 1.25 }}>
           <Card
             onClick={() => navigate('/dashboard/recommendations')}
             sx={{
@@ -245,7 +245,7 @@ export default function DashboardHomePage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid sx={{ width: { xs: '100%', sm: '50%' }, px: 1.25 }}>
           <Card
             onClick={() => navigate('/dashboard/preferences')}
             sx={{

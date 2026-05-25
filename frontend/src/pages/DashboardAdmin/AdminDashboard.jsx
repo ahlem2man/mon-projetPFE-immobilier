@@ -166,8 +166,8 @@ const AdminDashboard = () => {
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
               Croissance des Inscriptions (Mensuel)
             </Typography>
-            <Box sx={{ width: '100%', height: 300, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ width: '100%', height: 300, minWidth: 0, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={growthData}>
                   <defs>
                     <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
@@ -198,8 +198,8 @@ const AdminDashboard = () => {
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
               Croissance des Annonces (Mensuel)
             </Typography>
-            <Box sx={{ width: '100%', height: 300, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ width: '100%', height: 300, minWidth: 0, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={propertiesGrowthData}>
                   <defs>
                     <linearGradient id="colorProperties" x1="0" y1="0" x2="0" y2="1">
@@ -230,8 +230,8 @@ const AdminDashboard = () => {
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
               Croissance des Revenus (Mensuel)
             </Typography>
-            <Box sx={{ width: '100%', height: 300, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ width: '100%', height: 300, minWidth: 0, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={revenueGrowthData}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">

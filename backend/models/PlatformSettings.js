@@ -67,9 +67,8 @@ const platformSettingsSchema = new mongoose.Schema(
 );
 
 // Hooks
-platformSettingsSchema.pre('save', function (next) {
+platformSettingsSchema.pre('save', async function() {
   this.lastUpdatedAt = Date.now();
-  next();
 });
 
 module.exports = mongoose.model('PlatformSettings', platformSettingsSchema);

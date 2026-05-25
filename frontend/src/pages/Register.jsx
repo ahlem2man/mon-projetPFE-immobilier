@@ -50,25 +50,25 @@ const Register = () => {
 
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid sx={{ width: '100%' }}>
               <TextField
                 fullWidth label="Nom complet" name="name"
                 variant="outlined" onChange={handleChange} required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ width: '100%' }}>
               <TextField
                 fullWidth label="Email" name="email" type="email"
                 variant="outlined" onChange={handleChange} required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ width: '100%' }}>
               <TextField
                 fullWidth label="Mot de passe" name="password" type="password"
                 variant="outlined" onChange={handleChange} required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ width: '100%' }}>
               {/* Sélection du rôle : Spécificité de ton Sprint 2 */}
               <TextField
                 fullWidth select label="Type de compte" name="role"

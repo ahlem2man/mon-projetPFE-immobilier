@@ -60,7 +60,7 @@ export default function Contact() {
           }}
         >
           {/* GAUCHE : FORMULAIRE */}
-          <Grid item xs={12} md={7}>
+          <Grid sx={{ width: { xs: '100%', md: '58.33%' } }}>
             <Box 
               component="form" 
               onSubmit={handleSubmit} 
@@ -148,7 +148,7 @@ export default function Contact() {
           </Grid>
 
           {/* DROITE : LOGO HOMA */}
-          <Grid item xs={12} md={5} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6, bgcolor: 'white' }}>
+          <Grid sx={{ width: { xs: '100%', md: '41.67%' }, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6, bgcolor: 'white' }}>
             <Box sx={{ textAlign: 'center' }}>
               <Box 
                 component="img"
@@ -163,7 +163,7 @@ export default function Contact() {
 
         {/* SECTION INFOS & CARTE */}
         <Grid container spacing={6} alignItems="center">
-          <Grid item xs={12} md={5}>
+          <Grid sx={{ width: { xs: '100%', md: '41.67%' } }}>
             <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 4 }}>Contactez-nous</Typography>
             <Stack spacing={3}>
               <Box>
@@ -181,7 +181,7 @@ export default function Contact() {
             </Stack>
           </Grid>
 
-          <Grid item xs={12} md={7}>
+          <Grid sx={{ width: { xs: '100%', md: '58.33%' } }}>
             <Box sx={{ borderRadius: 6, overflow: 'hidden', height: '450px', boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}>
               <iframe
                 title="Map"

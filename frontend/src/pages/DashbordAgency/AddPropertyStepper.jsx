@@ -79,24 +79,24 @@ const AddPropertyStepper = () => {
       <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
         {activeStep === 0 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}><TextField fullWidth label="Titre de l'annonce" name="title" onChange={handleChange} /></Grid>
-            <Grid item xs={12}><TextField fullWidth multiline rows={3} label="Description" name="description" onChange={handleChange} /></Grid>
-            <Grid item xs={6}>
+            <Grid sx={{ width: '100%' }}><TextField fullWidth label="Titre de l'annonce" name="title" onChange={handleChange} /></Grid>
+            <Grid sx={{ width: '100%' }}><TextField fullWidth multiline rows={3} label="Description" name="description" onChange={handleChange} /></Grid>
+            <Grid sx={{ width: '50%' }}>
               <TextField select fullWidth label="Type" name="type" value={formData.type} onChange={handleChange}>
                 {['Appartement', 'Villa', 'Maison', 'Studio', 'Bureau'].map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
               </TextField>
             </Grid>
-            <Grid item xs={6}><TextField fullWidth label="Prix (EUR)" name="price" type="number" onChange={handleChange} /></Grid>
+            <Grid sx={{ width: '50%' }}><TextField fullWidth label="Prix (EUR)" name="price" type="number" onChange={handleChange} /></Grid>
           </Grid>
         )}
 
         {activeStep === 1 && (
           <Grid container spacing={3}>
-            <Grid item xs={6}><TextField fullWidth label="Ville" name="location" onChange={handleChange} /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="Adresse" name="address" onChange={handleChange} /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="Surface (m²)" name="surface" type="number" onChange={handleChange} /></Grid>
-            <Grid item xs={6}><TextField fullWidth label="Nombre de pièces" name="rooms" type="number" onChange={handleChange} /></Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ width: '50%' }}><TextField fullWidth label="Ville" name="location" onChange={handleChange} /></Grid>
+            <Grid sx={{ width: '50%' }}><TextField fullWidth label="Adresse" name="address" onChange={handleChange} /></Grid>
+            <Grid sx={{ width: '50%' }}><TextField fullWidth label="Surface (m²)" name="surface" type="number" onChange={handleChange} /></Grid>
+            <Grid sx={{ width: '50%' }}><TextField fullWidth label="Nombre de pièces" name="rooms" type="number" onChange={handleChange} /></Grid>
+            <Grid sx={{ width: '100%' }}>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
                 Équipements disponibles
               </Typography>

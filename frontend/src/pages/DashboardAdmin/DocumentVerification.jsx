@@ -126,7 +126,7 @@ const DocumentVerification = () => {
       ) : (
         <Grid container spacing={3}>
           {docs.map((doc) => (
-            <Grid item xs={12} md={6} key={doc._id}>
+            <Grid sx={{ width: { xs: '100%', md: '50%' } }} key={doc._id}>
               <Card sx={{ 
                 display: 'flex', 
                 flexDirection: 'column',
