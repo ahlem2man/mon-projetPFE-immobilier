@@ -60,7 +60,7 @@ exports.updateAgencyProfile = async (req, res) => {
       { new: true, upsert: true, runValidators: true }
     );
 
-    // 📝 Log l'activité : Profil agence modifié
+    //  Log l'activité : Profil agence modifié
     await logUserActivity(
       req.user.id,
       'agency',

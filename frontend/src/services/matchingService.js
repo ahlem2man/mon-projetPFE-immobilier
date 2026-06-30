@@ -64,7 +64,8 @@ export const archiveMatching = async (token, matchingId) => {
       Authorization: `Bearer ${token}`,
     },
   };
-  const response = await axios.post(`${API_URL}/${matchingId}/archive`, {}, config);
+  // Modifié : API_BASE_URL + ajout de /matchings pour rester cohérent avec le backend
+  const response = await axios.post(`${API_BASE_URL}/matchings/${matchingId}/archive`, {}, config);
   return response.data;
 };
 
@@ -77,7 +78,8 @@ export const restoreMatching = async (token, matchingId) => {
       Authorization: `Bearer ${token}`,
     },
   };
-  const response = await axios.put(`${API_URL}/${matchingId}/restore`, {}, config);
+  // Modifié : API_BASE_URL + ajout de /matchings
+  const response = await axios.put(`${API_BASE_URL}/matchings/${matchingId}/restore`, {}, config);
   return response.data;
 };
 
@@ -90,6 +92,7 @@ export const triggerManualMatching = async (token) => {
       Authorization: `Bearer ${token}`,
     },
   };
-  const response = await axios.post(`${API_URL}/admin/manual-trigger`, {}, config);
+  // Modifié : API_BASE_URL + correction de la route si nécessaire
+  const response = await axios.post(`${API_BASE_URL}/matchings/admin/manual-trigger`, {}, config);
   return response.data;
 };

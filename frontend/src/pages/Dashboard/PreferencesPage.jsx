@@ -66,7 +66,7 @@ const PreferencesPage = () => {
         wantedAmenities: []
       };
 
-      console.log('📤 Envoi des préférences:', preferencesData);
+      console.log(' Envoi des préférences:', preferencesData);
 
       // Utiliser le nouvel endpoint dédié au matching
       const res = await axios.post(`${API_BASE_URL}/matchings/save-preferences`, 
@@ -76,9 +76,9 @@ const PreferencesPage = () => {
         }
       );
 
-      console.log('✅ Réponse:', res.data);
+      console.log(' Réponse:', res.data);
 
-      setMessage({ type: 'success', text: `✅ Préférences sauvegardées ! Allez en Recommandations et cliquez Générer.` });
+      setMessage({ type: 'success', text: ` Préférences sauvegardées ! Allez en Recommandations et cliquez Générer.` });
       setTimeout(() => setMessage({ type: '', text: '' }), 5000);
     } catch (err) {
       console.error('Error:', err);

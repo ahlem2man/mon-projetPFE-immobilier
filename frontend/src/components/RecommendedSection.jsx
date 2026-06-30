@@ -31,7 +31,13 @@ const RecommendedSection = ({ token }) => {
     const loadData = async () => {
       try {
         const res = await getUserMatchings(token);
-        setMatchings(res.data);
+        
+        // FILTRAGE : On ne garde QUE les matchings dont la propriété existe réellement
+        const validMatchings = res.data.filter(
+          (item) => item.propertyId !== null && item.propertyId !== undefined
+        );
+        
+        setMatchings(validMatchings);
       } catch (err) {
         console.error("Erreur", err);
       } finally {
@@ -150,26 +156,37 @@ const RecommendedSection = ({ token }) => {
               <CardContent>
                 {/* Property Info */}
                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: '#0a1930' }}>
-                  {item.propertyId?.title}
+                  {item.propertyId?.title || "Propriété sans titre"}
                 </Typography>
 
                 <Stack direction="row" spacing={2} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                  {item.propertyId?.location && (
+                    <Chip 
+                      icon={<LocationOnIcon />}
+                      label={item.propertyId.location} 
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
+                  
+                  {/* Sécurité prix */}
                   <Chip 
-                    icon={<LocationOnIcon />}
-                    label={item.propertyId?.location} 
-                    size="small"
-                    variant="outlined"
-                  />
-                  <Chip 
-                    label={`${item.propertyId?.price}€/mois`} 
-                    sx={{ fontWeight: 'bold', bgcolor: '#e8f5e9', color: '#2e7d32' }}
+                    label={item.propertyId?.price ? `${item.propertyId.price}€/mois` : "Prix non renseigné"} 
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      bgcolor: item.propertyId?.price ? '#e8f5e9' : '#f5f5f5', 
+                      color: item.propertyId?.price ? '#2e7d32' : '#616161' 
+                    }}
                     size="small"
                   />
-                  <Chip 
-                    label={item.propertyId?.type}
-                    size="small"
-                    variant="outlined"
-                  />
+
+                  {item.propertyId?.type && (
+                    <Chip 
+                      label={item.propertyId.type}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
                 </Stack>
 
                 {/* Show amenities if available */}
@@ -222,7 +239,7 @@ const RecommendedSection = ({ token }) => {
                     <ScoreDetail 
                       label="Budget & Prix" 
                       icon={<EuroIcon sx={{ fontSize: '18px', color: '#4caf50' }} />}
-                      value={item.details?.priceScore} 
+                      value={item.details?.priceScore || 0} 
                       max={30} 
                       color="#4caf50"
                       explanation="Correspond à votre budget maximum"
@@ -230,7 +247,7 @@ const RecommendedSection = ({ token }) => {
                     <ScoreDetail 
                       label="Localisation" 
                       icon={<LocationOnIcon sx={{ fontSize: '18px', color: '#2196f3' }} />}
-                      value={item.details?.locationScore} 
+                      value={item.details?.locationScore || 0} 
                       max={35} 
                       color="#2196f3"
                       explanation="Proximité avec votre ville préférée"
@@ -238,7 +255,7 @@ const RecommendedSection = ({ token }) => {
                     <ScoreDetail 
                       label="Type de bien" 
                       icon={<HomeIcon sx={{ fontSize: '18px', color: '#ff9800' }} />}
-                      value={item.details?.typeScore} 
+                      value={item.details?.typeScore || 0} 
                       max={20} 
                       color="#ff9800"
                       explanation="Correspond à votre type de bien préféré"
@@ -246,7 +263,7 @@ const RecommendedSection = ({ token }) => {
                     <ScoreDetail 
                       label="Équipements" 
                       icon={<StarIcon sx={{ fontSize: '18px', color: '#9c27b0' }} />}
-                      value={item.details?.amenitiesScore} 
+                      value={item.details?.amenitiesScore || 0} 
                       max={15} 
                       color="#9c27b0"
                       explanation="Présence de vos équipements souhaités"
@@ -302,10 +319,12 @@ const RecommendedSection = ({ token }) => {
                   </IconButton>
                 </Tooltip>
 
+                {/* Sécurité de navigation au clic */}
                 <Button 
                   size="small" 
                   variant="contained"
-                  onClick={() => navigate(`/property/${item.propertyId._id}`)}
+                  disabled={!item.propertyId?._id}
+                  onClick={() => item.propertyId?._id && navigate(`/property/${item.propertyId._id}`)}
                   sx={{ ml: 'auto', bgcolor: '#007b83' }}
                 >
                   Voir le bien
@@ -319,9 +338,6 @@ const RecommendedSection = ({ token }) => {
   );
 };
 
-/**
- * Composant réutilisable pour afficher une ligne de score avec barre
- */
 const ScoreDetail = ({ label, icon, value, max, color, explanation }) => (
   <Box sx={{ mb: 2 }}>
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>

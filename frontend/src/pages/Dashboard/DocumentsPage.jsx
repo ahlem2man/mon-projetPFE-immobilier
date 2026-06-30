@@ -55,9 +55,8 @@ const DocumentsPage = () => {
   const [selectedAgencies, setSelectedAgencies] = useState([]);
   const [loadingAgencies, setLoadingAgencies] = useState(false);
   const [openAgenciesDialog, setOpenAgenciesDialog] = useState(false);
-  const [sendingMessage, setSendingMessage] = useState('');
 
-  // Charger le profil au démarrage (Étape 8)
+  // Charger le profil au démarrage
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -76,18 +75,16 @@ const DocumentsPage = () => {
             });
           }
           
-          // 🆕 Charger les documents sauvegardés au backend
+          // Charger les documents sauvegardés au backend
           if (res.data.documents) {
             setDocuments(prev => {
               const updated = { ...prev };
               Object.keys(res.data.documents).forEach(key => {
                 if (res.data.documents[key]) {
-                  // Les documents du backend sont des chemins (strings)
-                  // On les garde en mémoire avec un marker spécial
                   updated[key] = {
                     ...updated[key],
                     uploadedPath: res.data.documents[key],
-                    file: null // Le fichier ne peut pas être re-uploaded depuis le browser
+                    file: null 
                   };
                 }
               });
@@ -147,13 +144,10 @@ const DocumentsPage = () => {
 
   const removeFile = async (key) => {
     const fileName = documents[key].file?.name || documents[key].uploadedPath?.split('/').pop();
-    
-    // Afficher une alerte de confirmation
     const confirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer le document "${fileName}" ?`);
     
-    if (!confirmed) return; // Si l'utilisateur annule, ne rien faire
+    if (!confirmed) return;
     
-    // Si c'est un fichier uploadé (uploadedPath), supprimer du backend
     if (documents[key].uploadedPath) {
       try {
         await axios.delete(
@@ -178,33 +172,25 @@ const DocumentsPage = () => {
     }));
   };
 
+  // ÉTAPE A : Enregistrer les documents et la situation sur le Cloud / DB
   const handleUploadAll = async () => {
-    // Validation : statut professionnel requis
     if (!applicantProfile.professionalStatus) {
       showNotify('Veuillez sélectionner votre situation professionnelle', 'warning');
       return;
     }
 
-    // Validation : au moins la pièce d'identité requise
     if (!documents.identityCard.file && !documents.identityCard.uploadedPath) {
       showNotify('La pièce d\'identité est obligatoire', 'warning');
       return;
     }
 
-    // Validation : au moins une agence sélectionnée
-    if (selectedAgencies.length === 0) {
-      showNotify('Veuillez sélectionner au moins une agence', 'warning');
-      return;
-    }
-
-    // ALERTE DE DÉBUT
-    showNotify('Préparation et envoi de votre dossier en cours...', 'info');
+    showNotify('Sauvegarde de votre profil et de vos documents...', 'info');
     setUploading(true);
     
     try {
       const token = localStorage.getItem('token');
 
-      // ÉTAPE 1 : Envoyer les infos de profil (JSON)
+      // 1. Sauvegarde des infos profil
       await axios.put(`${API_BASE_URL}/tenants/profile`, {
         professionalStatus: applicantProfile.professionalStatus,
         hasGuarantee: applicantProfile.hasGuarantee,
@@ -216,12 +202,10 @@ const DocumentsPage = () => {
         }
       });
 
-      // ÉTAPE 2 : Envoyer les documents (FormData)
+      // 2. Envoi des nouveaux fichiers si présents
       const formData = new FormData();
       let hasFilesToUpload = false;
 
-      // Ajouter tous les documents avec .file (en attente d'envoi)
-      // Les documents avec .uploadedPath sont déjà sur le backend
       Object.keys(documents).forEach(key => {
         if (documents[key].file) {
           formData.append(key, documents[key].file);
@@ -229,7 +213,6 @@ const DocumentsPage = () => {
         }
       });
 
-      // Si des documents à envoyer, les envoyer
       if (hasFilesToUpload) {
         const response = await axios.post(
           `${API_BASE_URL}/tenants/upload-docs`, 
@@ -242,12 +225,11 @@ const DocumentsPage = () => {
           }
         );
 
-        // Mettre à jour la complétude (Étape 8)
         if (response.data.completionPercentage !== undefined) {
           setCompletion(response.data.completionPercentage);
         }
 
-        // Recharger les documents depuis le backend
+        // Rafraîchir l'état local avec les chemins renvoyés par le serveur
         const refreshRes = await axios.get(`${API_BASE_URL}/tenants/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -269,21 +251,10 @@ const DocumentsPage = () => {
         }
       }
 
-      // ÉTAPE 3 : Envoyer le dossier aux agences sélectionnées
-      await axios.post(
-        `${API_BASE_URL}/tenants/submit-dossier`,
-        {
-          agencyIds: selectedAgencies
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      showNotify(`Dossier envoyé à ${selectedAgencies.length} agence(s)! Complétude: ${completion}%`, 'success');
-      setOpenAgenciesDialog(false);
-      setSelectedAgencies([]);
+      showNotify(`Dossier enregistré avec succès ! Complétude : ${completion}%`, 'success');
     } catch (err) {
-      console.error("Erreur détaillée :", err.response?.data);
-      showNotify(err.response?.data?.message || "Erreur lors de l'envoi du dossier.", 'error');
+      console.error("Erreur enregistrement :", err.response?.data);
+      showNotify(err.response?.data?.message || "Erreur lors de la sauvegarde.", 'error');
     } finally {
       setUploading(false);
     }
@@ -297,30 +268,34 @@ const DocumentsPage = () => {
     );
   };
 
+  // ÉTAPE B : Soumettre le dossier existant en base de données aux agences sélectionnées
   const handleSendDossierToAgencies = async () => {
     if (selectedAgencies.length === 0) {
       showNotify('Sélectionnez au moins une agence', 'warning');
       return;
     }
 
+    if (completion < 100) {
+      const confirmSend = window.confirm(`Votre dossier n'est pas à 100% (Actuellement: ${completion}%). Voulez-vous quand même l'envoyer aux agences sélectionnées ?`);
+      if (!confirmSend) return;
+    }
+
     try {
       setUploading(true);
       const token = localStorage.getItem('token');
       
-      const res = await axios.post(
+      await axios.post(
         `${API_BASE_URL}/tenants/submit-dossier`,
-        {
-          agencyIds: selectedAgencies
-        },
+        { agencyIds: selectedAgencies },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      showNotify(` Dossier envoyé à ${selectedAgencies.length} agence(s)!`, 'success');
+      showNotify(` Dossier envoyé à ${selectedAgencies.length} agence(s) !`, 'success');
       setOpenAgenciesDialog(false);
       setSelectedAgencies([]);
     } catch (err) {
       console.error('Erreur envoi dossier:', err);
-      showNotify(err.response?.data?.message || 'Erreur lors de l\'envoi', 'error');
+      showNotify(err.response?.data?.message || 'Erreur lors de l\'envoi aux agences', 'error');
     } finally {
       setUploading(false);
     }
@@ -337,7 +312,6 @@ const DocumentsPage = () => {
         </Typography>
       </Box>
 
-
       {/* SECTION 1 : SITUATION PROFESSIONNELLE ET GARANT */}
       <Paper 
         sx={{ 
@@ -353,7 +327,6 @@ const DocumentsPage = () => {
         </Typography>
 
         <Grid container spacing={3}>
-          {/* Situation professionnelle */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl fullWidth>
               <InputLabel>Situation professionnelle *</InputLabel>
@@ -372,7 +345,6 @@ const DocumentsPage = () => {
             </FormControl>
           </Grid>
 
-          {/* Garant */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
               control={
@@ -388,7 +360,6 @@ const DocumentsPage = () => {
             </Typography>
           </Grid>
 
-          {/* Détails garant si oui */}
           {applicantProfile.hasGuarantee && (
             <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
@@ -412,19 +383,17 @@ const DocumentsPage = () => {
 
       {/* SECTION 2 : DOCUMENTS ORGANISÉS PAR CATÉGORIE */}
       <Box>
-        {/* Titre général des documents */}
         <Typography variant="h6" fontWeight="bold" color="#0a1930" sx={{ mb: 3 }}>
-       Pièces nécessaires pour constituer un dossier locatif complet
+          Pièces nécessaires pour constituer un dossier locatif complet (Progression : {completion}%)
         </Typography>
 
-        {/* Grouper par section */}
         {['Identité', 'Revenus', 'Logement', 'Domicile'].map((section) => (
           <Box key={section} sx={{ mb: 4 }}>
             <Typography variant="subtitle1" fontWeight="bold" color="#0a1930" sx={{ mb: 2, pl: 1, borderLeft: '4px solid #0a1930' }}>
-              {section === 'Identité' && ' Pièce d\'identité'}
-              {section === 'Revenus' && ' Justificatifs de revenus'}
-              {section === 'Logement' && ' Situation actuelle de logement'}
-              {section === 'Domicile' && ' Justificatif de domicile'}
+              {section === 'Identité' && "Pièce d'identité"}
+              {section === 'Revenus' && 'Justificatifs de revenus'}
+              {section === 'Logement' && 'Situation actuelle de logement'}
+              {section === 'Domicile' && 'Justificatif de domicile'}
             </Typography>
 
             <Grid container spacing={2}>
@@ -440,14 +409,14 @@ const DocumentsPage = () => {
                         alignItems: 'center', 
                         justifyContent: 'space-between',
                         borderRadius: '12px',
-                        borderColor: documents[key].file ? '#4caf50' : '#e0e0e0',
-                        bgcolor: documents[key].file ? '#fafffa' : '#fff',
+                        borderColor: documents[key].file || documents[key].uploadedPath ? '#4caf50' : '#e0e0e0',
+                        bgcolor: documents[key].file || documents[key].uploadedPath ? '#fafffa' : '#fff',
                         transition: 'all 0.2s ease-in-out'
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1 }}>
                         <Box sx={{ 
-                          bgcolor: documents[key].file ? '#e8f5e9' : '#f5f5f5', 
+                          bgcolor: documents[key].file || documents[key].uploadedPath ? '#e8f5e9' : '#f5f5f5', 
                           p: 1.5, 
                           borderRadius: '10px',
                           display: 'flex' 
@@ -467,12 +436,12 @@ const DocumentsPage = () => {
                           </Typography>
                           {documents[key].file && (
                             <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: '500', mt: 0.5 }}>
-                              ✓ Prêt à envoyer: {documents[key].file.name}
+                              ✓ Prêt à sauvegarder : {documents[key].file.name}
                             </Typography>
                           )}
                           {documents[key].uploadedPath && !documents[key].file && (
                             <Typography variant="body2" sx={{ color: '#2196f3', fontWeight: '500', mt: 0.5 }}>
-                              ✓ Uploadé avec succès
+                              ✓ Enregistré en ligne
                             </Typography>
                           )}
                         </Box>
@@ -525,6 +494,29 @@ const DocumentsPage = () => {
 
       {uploading && <LinearProgress sx={{ mt: 4, borderRadius: 2 }} />}
 
+      {/* BOUTON PRINCIPAL : SAUVEGARDER ET METTRE À JOUR LE DOSSIER */}
+      <Box sx={{ mt: 5, mb: 5, textAlign: 'center' }}>
+        <Button 
+          variant="contained" 
+          size="large"
+          onClick={handleUploadAll}
+          disabled={uploading || (!documents.identityCard.file && !documents.identityCard.uploadedPath)}
+          sx={{ 
+            bgcolor: '#0a1930', 
+            px: 6, 
+            py: 2, 
+            fontWeight: 'bold',
+            borderRadius: '4px',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            '&:hover': { bgcolor: '#1a2940' },
+            '&:disabled': { bgcolor: '#e0e0e0' }
+          }}
+        >
+          {uploading ? 'Enregistrement...' : '1. Enregistrer mes documents et mon profil'}
+        </Button>
+      </Box>
+
       {/* SECTION 3 : ENVOYER LE DOSSIER AUX AGENCES */}
       <Paper 
         sx={{ 
@@ -537,58 +529,34 @@ const DocumentsPage = () => {
         }}
       >
         <Typography variant="h6" fontWeight="bold" color="#0a1930" gutterBottom sx={{ mb: 2 }}>
-          Envoyer votre dossier à des agences
+          2. Envoyer votre dossier à des agences
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Une fois votre dossier complété, vous pouvez l'envoyer directement aux agences de votre choix. Elles pourront examiner votre profil et vous contacter pour des opportunités.
+          Une fois vos fichiers enregistrés ci-dessus, vous pouvez distribuer votre profil aux agences partenaires pour qu'elles étudient votre candidature.
         </Typography>
         
         <Button
           variant="contained"
           startIcon={<SendIcon />}
           onClick={() => setOpenAgenciesDialog(true)}
-          disabled={completion < 100}
           sx={{
             bgcolor: '#2196f3',
             px: 4,
             py: 1.5,
             textTransform: 'none',
             fontSize: '1rem',
-            '&:hover': { bgcolor: '#1976d2' },
-            '&:disabled': { bgcolor: '#e0e0e0' }
+            '&:hover': { bgcolor: '#1976d2' }
           }}
         >
           Sélectionner des agences
         </Button>
         
         {completion < 100 && (
-          <Typography variant="caption" color="error" sx={{ display: 'block', mt: 2 }}>
-            Votre dossier doit être à 100% pour envoyer aux agences
+          <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 2, fontWeight: '500' }}>
+             Votre dossier n'est pas à 100%. Vous pouvez tout de même l'envoyer, mais un dossier complet maximise vos chances.
           </Typography>
         )}
       </Paper>
-
-      <Box sx={{ mt: 5, textAlign: 'center' }}>
-        <Button 
-          variant="contained" 
-          size="large"
-          onClick={handleUploadAll}
-          disabled={uploading || (!documents.identityCard.file && !documents.identityCard.uploadedPath)}
-          sx={{ 
-            bgcolor: '#0a1930', 
-            px: 10, 
-            py: 2, 
-            fontWeight: 'bold',
-            borderRadius: '4px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            '&:hover': { bgcolor: '#1a2940' },
-            '&:disabled': { bgcolor: '#e0e0e0' }
-          }}
-        >
-          {uploading ? 'Envoi en cours...' : 'Valider et envoyer mon dossier complet'}
-        </Button>
-      </Box>
 
       <Snackbar 
         open={snackbar.open} 
@@ -615,9 +583,9 @@ const DocumentsPage = () => {
           ) : agencies.length === 0 ? (
             <Alert severity="info">Aucune agence disponible pour le moment</Alert>
           ) : (
-            <Box>
+            <Box sx={{ mt: 1 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Sélectionnez une ou plusieurs agences pour envoyer votre dossier complet:
+                Sélectionnez une ou plusieurs agences pour envoyer votre dossier actuel :
               </Typography>
               
               {agencies.map(agency => (
@@ -660,7 +628,7 @@ const DocumentsPage = () => {
                     '&:disabled': { bgcolor: '#e0e0e0' }
                   }}
                 >
-                  {uploading ? 'Envoi en cours...' : 'VALIDER ET ENVOYER MON DOSSIER COMPLET'}
+                  {uploading ? 'Envoi en cours...' : 'CONFIRMER L\'ENVOI AUX AGENCES'}
                 </Button>
               </Box>
             </Box>

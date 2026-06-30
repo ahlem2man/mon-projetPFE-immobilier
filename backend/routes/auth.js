@@ -146,28 +146,39 @@ router.post('/forgot-password', async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) return res.status(404).json({ message: "Aucun utilisateur avec cet email." });
 
-   
     const resetToken = crypto.randomBytes(32).toString('hex');
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; 
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 heure
     await user.save();
 
     const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
 
-    await sendEmail({
-      email: user.email,
-      subject: "Réinitialisation de mot de passe - ImmoAhlem",
-      html: `
-        <h3>Demande de nouveau mot de passe</h3>
-        <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous :</p>
-        <a href="${resetUrl}" style="background-color: #e11d48; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">Changer mon mot de passe</a>
-        <p>Ce lien expirera dans 1 heure.</p>
-      `
-    });
+    //  On entoure l'envoi d'email d'un try/catch pour éviter le crash 500
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Réinitialisation de mot de passe - ImmoAhlem",
+        html: `
+          <h3>Demande de nouveau mot de passe</h3>
+          <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous :</p>
+          <a href="${resetUrl}" style="background-color: #e11d48; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">Changer mon mot de passe</a>
+          <p>Ce lien expirera dans 1 heure.</p>
+        `
+      });
 
-    res.json({ message: "Un e-mail de réinitialisation a été envoyé." });
+      res.json({ message: "Un e-mail de réinitialisation a été envoyé." });
+
+    } catch (mailErr) {
+      console.error(" ERREUR SMTP / ENVOI EMAIL :", mailErr.message);
+      return res.status(500).json({ 
+        message: "Le token a été généré, mais l'envoi du mail a échoué. Vérifie la configuration de ton serveur de mail (.env)", 
+        error: mailErr.message 
+      });
+    }
+
   } catch (err) {
-    res.status(500).json({ message: "Erreur serveur" });
+    console.error(" ERREUR SERVEUR GLOBALE :", err.message);
+    res.status(500).json({ message: "Erreur serveur : " + err.message });
   }
 });
 
